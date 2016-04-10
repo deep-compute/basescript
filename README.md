@@ -138,7 +138,7 @@ The following example shows how to use the stats collection abilities of
 `BaseScript`
 
 ### Stats collection
-`
+
 collectingstats.py
 ```python
 from basescript import BaseScript
@@ -166,3 +166,29 @@ running. Assuming that your `StatsD` server is at "http://localhost:8125", you
 don't have to do anything at all to enable collection. If your `StatsD` server
 is at a different location, use the `--statsd-server` argument to speficy the
 same.
+
+### Gevent and cooperative multitasking
+
+> TODO: Provide a good example for the utility of gevent
+
+#### Multiprocessing and disabling gevent
+
+Gevent offers a great amount of convenience however it is currently
+incompatible with python's `multiprocessing` module. Here is an example on how
+to disable gevent so you can use `multiprocessing`.
+
+disable\_gevent.py
+```python
+from gevent import monkey; monkey.patch_all = lambda: None
+
+from basescript import BaseScript
+
+class MyScript(BaseScript):
+    def run(self):
+        # do something here including using
+        # `multiprocessing` module
+        pass
+
+if __name__ == '__main__':
+    MyScript().run()
+```
