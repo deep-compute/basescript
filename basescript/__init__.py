@@ -1,0 +1,1 @@
+from basescript import BaseScript
