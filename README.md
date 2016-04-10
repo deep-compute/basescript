@@ -19,6 +19,8 @@ sudo pip install git+git://github.com/deep-compute/basescript.git
 
 Here is a simple example to get started
 
+### Hello World
+
 helloworld.py
 ```python
 from basescript import BaseScript
@@ -51,6 +53,7 @@ Run script with custom log file
 python helloworld.py --log-level DEBUG --log mylog
 ```
 
+### Command line args, Using the logger
 The following is a more involved example
 
 adder.py
@@ -134,6 +137,8 @@ read more about it at https://docs.python.org/2/library/logging.html.
 The following example shows how to use the stats collection abilities of
 `BaseScript`
 
+### Stats collection
+`
 collectingstats.py
 ```python
 from basescript import BaseScript
