@@ -86,7 +86,7 @@ if __name__ == '__main__':
 
 Run the script as follows and observe the usage information shown. Note how the
 description appears along with the `c` argument.
-```
+```bash
 python adder.py --help
 
 usage: adder.py [-h] [--name NAME] [--statsd-server STATSD_SERVER] [--log LOG]
@@ -110,3 +110,54 @@ optional arguments:
   --quiet
 
 ```
+
+Run the script now to see the intended output
+```shell
+python adder.py 30
+60
+```
+
+Run the same with info and higher level logs enabled
+```bash
+python adder.py --log-level INFO 30
+2016-04-10 13:48:27,356 INFO Starting run of script ...
+60
+2016-04-10 13:48:27,356 INFO Script is done
+```
+
+`--log-level` accepts all the values shown at
+https://docs.python.org/2/library/logging.html#logging-levels.
+
+`log` is a log object created using python's standard `logging` module. You can
+read more about it at https://docs.python.org/2/library/logging.html.
+
+The following example shows how to use the stats collection abilities of
+`BaseScript`
+
+collectingstats.py
+```python
+from basescript import BaseScript
+
+class CollectingStats(BaseScript):
+    def run(self):
+        # increment a counter by 1
+        self.stats.incr("eventA")
+
+        # increment a counter by 10
+        self.stats.incr("eventB", 10)
+
+        # decrement a counter by 1
+        self.stats.decr("eventB")
+
+        # set a gauge level
+        self.stats.gauge("gaugeA", 99)
+
+if __name__ == '__main__':
+    CollectingStats().run()
+```
+
+To view the stats, you will need to have a `StatsD` server configured and
+running. Assuming that your `StatsD` server is at "http://localhost:8125", you
+don't have to do anything at all to enable collection. If your `StatsD` server
+is at a different location, use the `--statsd-server` argument to speficy the
+same.

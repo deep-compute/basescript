@@ -79,7 +79,6 @@ class StatsCollector(object):
         self.cache = {}
         self.gauge_cache = {}
 
-
 class BaseScript(object):
     LOG_FORMATTER = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
     DESC = 'Base script abstraction'
