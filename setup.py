@@ -10,8 +10,6 @@ setup(
     url="https://github.com/deep-compute/basescript",
     license='MIT License',
     install_requires=[
-        'gevent',
-        'statsd',
     ],
     package_dir={'basescript': 'basescript'},
     packages=find_packages('.'),
