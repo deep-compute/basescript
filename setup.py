@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="basescript",
-    version='0.1',
+    version='0.1.1',
     description="Basic infrastructure for writing scripts",
     keywords='basescript',
     author='Prashanth Ellina',
