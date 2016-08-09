@@ -9,6 +9,7 @@ MAX_LOG_FILE_SIZE = 100 * 1024 * 1024 # 100MB
 class BaseScript(object):
     LOG_FORMATTER = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
     DESC = 'Base script abstraction'
+    LOG_LEVEL = 'INFO'
 
     def __init__(self):
         # argparse parser obj
@@ -62,7 +63,7 @@ class BaseScript(object):
             help='Name to identify this instance')
         parser.add_argument('--log', default=None,
             help='Name of log file')
-        parser.add_argument('--log-level', default='WARNING',
+        parser.add_argument('--log-level', default=self.LOG_LEVEL,
             help='Logging level as picked from the logging module')
         parser.add_argument('--quiet', action='store_true')
 
