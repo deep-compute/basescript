@@ -9,7 +9,7 @@ Here are some facilities that Base Script offers:
 ## Installation
 
 ``` bash
-sudo pip install git+git://github.com/deep-compute/basescript.git
+pip install basescript
 ```
 
 ## Usage
