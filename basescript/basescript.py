@@ -15,7 +15,14 @@ class BaseScript(object):
         # argparse parser obj
         self.parser = argparse.ArgumentParser(description=self.DESC)
         self.define_baseargs(self.parser)
-        self.define_args(self.parser)
+
+        self.subcommands = self.parser.add_subparsers(title='commands')
+        self.define_subcommands(self.subcommands)
+        self.subcommand_run = self.subcommands.add_parser('run')
+        self.subcommand_run.set_defaults(func=self.run)
+
+        self.define_args(self.subcommand_run)
+
         self.args = self.parser.parse_args()
 
         self.hostname = socket.gethostname()
@@ -26,6 +33,7 @@ class BaseScript(object):
         self.log.debug('init: args=%s' % repr(self.args))
 
         self.init()
+        self.args.func()
 
     @property
     def name(self):
@@ -52,6 +60,17 @@ class BaseScript(object):
         log.setLevel(getattr(logging, log_level.upper()))
 
         return log
+
+    def define_subcommands(self, subcommands):
+        '''
+        Define subcommands (as defined at https://docs.python.org/2/library/argparse.html#sub-commands)
+
+        eg: adding a sub-command called "blah" that invokes a function fn_blah
+
+        blah_command = subcommands.add_parser('blah')
+        blah_command.set_defaults(func=fn_blah)
+        '''
+        pass
 
     def define_baseargs(self, parser):
         '''

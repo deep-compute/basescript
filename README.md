@@ -27,7 +27,7 @@ class HelloWorld(BaseScript):
         print "Hello world"
 
 if __name__ == '__main__':
-    HelloWorld().run()
+    HelloWorld().
 ```
 
 > NOTE: all examples showcased here are available under the `examples` directory
@@ -35,19 +35,19 @@ if __name__ == '__main__':
 Run the above by doing:
 
 ```bash
-python helloworld.py
+python helloworld.py run
 ```
 
 Run script with log level set to DEBUG
 
 ```bash
-python helloworld.py --log-level DEBUG
+python helloworld.py --log-level DEBUG run
 ```
 
 Run script with custom log file
 
 ```bash
-python helloworld.py --log-level DEBUG --log mylog
+python helloworld.py --log-level DEBUG --log mylog run
 ```
 
 ### Command line args, Using the logger
@@ -81,22 +81,18 @@ class Adder(BaseScript):
         self.log.info("Script is done")
 
 if __name__ == '__main__':
-    Adder().run()
+    Adder()
 ```
 
 Run the script as follows and observe the usage information shown. Note how the
 description appears along with the `c` argument.
 ```bash
 python adder.py --help
-
-usage: adder.py [-h] [--name NAME] [--log LOG]
-                [--log-level LOG_LEVEL] [--quiet]
-                c
+usage: adder.py [-h] [--name NAME] [--log LOG] [--log-level LOG_LEVEL]
+                [--quiet]
+                {run} ...
 
 Adds numbers
-
-positional arguments:
-  c                     Number to add
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -106,11 +102,23 @@ optional arguments:
                         Logging level as picked from the logging module
   --quiet
 
+commands:
+  {run}
+```
+```bash
+python adder.py run --help
+usage: adder.py run [-h] c
+
+positional arguments:
+  c           Number to add
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 Run the script now to see the intended output
 ```shell
-python adder.py 30
+python adder.py run 30
 60
 ```
 

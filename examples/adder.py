@@ -24,4 +24,4 @@ class Adder(BaseScript):
         self.log.info("Script is done")
 
 if __name__ == '__main__':
-    Adder().run()
+    Adder()
