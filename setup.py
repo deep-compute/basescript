@@ -10,7 +10,7 @@ except:
     Make sure pypandoc is installed.
     """
 
-version = '0.1.2'
+version = '0.1.3'
 setup(
     name="basescript",
     version=version,

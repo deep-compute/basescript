@@ -26,13 +26,16 @@ class BaseScript(object):
         self.args = self.parser.parse_args()
 
         self.hostname = socket.gethostname()
-
         self.log = self.init_logger(self.args.log, self.args.log_level,\
             quiet=self.args.quiet)
 
         self.log.debug('init: args=%s' % repr(self.args))
 
-        self.init()
+    def start(self):
+        '''
+        Starts execution of the script
+        '''
+        # invoke the appropriate sub-command as requested from command-line
         self.args.func()
 
     @property
@@ -99,16 +102,8 @@ class BaseScript(object):
         '''
         pass
 
-    def init(self):
-        '''
-        Override this method to put any initialization logic for your script.
-        It is recommended that you use this instead of subclassing __init__.
-        '''
-        pass
-
     def run(self):
         '''
-        Override this method to define logic for the scripts functionality.
-        It is recommended that you use this instead of subclassing __init__.
+        Override this method to define logic for `run` sub-command
         '''
         pass

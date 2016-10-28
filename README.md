@@ -27,7 +27,7 @@ class HelloWorld(BaseScript):
         print "Hello world"
 
 if __name__ == '__main__':
-    HelloWorld().
+    HelloWorld().start()
 ```
 
 > NOTE: all examples showcased here are available under the `examples` directory
@@ -81,7 +81,7 @@ class Adder(BaseScript):
         self.log.info("Script is done")
 
 if __name__ == '__main__':
-    Adder()
+    Adder().start()
 ```
 
 Run the script as follows and observe the usage information shown. Note how the
