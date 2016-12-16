@@ -62,11 +62,8 @@ class Adder(BaseScript):
     # as a part of the usage doc when --help option is used during running.
     DESC = 'Adds numbers'
 
-    def init(self):
-        '''
-        We can put whatever script initialization we need for our script
-        over here. This is preferred to overriding __init__
-        '''
+    def __init__(self):
+        super(Adder, self).__init__()
         self.a = 10
         self.b = 20
 
