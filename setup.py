@@ -10,7 +10,7 @@ except:
     Make sure pypandoc is installed.
     """
 
-version = '0.1.4'
+version = '0.1.5'
 setup(
     name="basescript",
     version=version,
@@ -23,6 +23,7 @@ setup(
     download_url="https://github.com/deep-compute/basescript/tarball/%s" % version,
     license='MIT License',
     install_requires=[
+        "structlog",
     ],
     package_dir={'basescript': 'basescript'},
     packages=find_packages('.'),

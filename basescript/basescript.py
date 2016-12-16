@@ -1,15 +1,19 @@
+from __future__ import absolute_import
+
 import sys
 import logging
-import logging.handlers
 import argparse
 import socket
+import structlog
 
-MAX_LOG_FILE_SIZE = 100 * 1024 * 1024 # 100MB
+from .log import LevelLoggerFactory, BoundLevelLogger, StdlibStructlogHandler
 
 class BaseScript(object):
-    LOG_FORMATTER = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
     DESC = 'Base script abstraction'
     LOG_LEVEL = 'INFO'
+
+    # stdlib to structlog handlers should be configured only once.
+    _GLOBAL_LOG_CONFIGURED = False
 
     def __init__(self):
         # argparse parser obj
@@ -26,10 +30,10 @@ class BaseScript(object):
         self.args = self.parser.parse_args()
 
         self.hostname = socket.gethostname()
-        self.log = self.init_logger(self.args.log, self.args.log_level,\
-            quiet=self.args.quiet)
+        self.log = self.init_logger(self.args.log_level)
 
-        self.log.debug('init: args=%s' % repr(self.args))
+        args = { n: getattr(self.args, n) for n in vars(self.args) }
+        self.log.debug("basescript init", **args)
 
     def start(self):
         '''
@@ -42,26 +46,41 @@ class BaseScript(object):
     def name(self):
         return '.'.join([x for x in (sys.argv[0].split('.')[0], self.args.name) if x])
 
-    def init_logger(self, fname, log_level, quiet=False):
-        if not fname:
-            fname = '%s.log' % self.name
+    def _configure_logger(self, level):
+        # NOTE not thread safe. Multiple BaseScripts cannot be instantiated concurrently.
+        if self._GLOBAL_LOG_CONFIGURED:
+            return
 
-        log = logging.getLogger('')
+        # a global level struct log config unless otherwise specified.
+        structlog.configure(
+            processors=[
+                structlog.stdlib.PositionalArgumentsFormatter(),
+                structlog.processors.StackInfoRenderer(),
+                structlog.processors.format_exc_info,
+                structlog.processors.JSONRenderer(),
+            ],
+            context_class=dict,
+            logger_factory=LevelLoggerFactory(level=level),
+            wrapper_class=BoundLevelLogger,
+            cache_logger_on_first_use=True,
+        )
 
-        stderr_hdlr = logging.StreamHandler(sys.stderr)
-        rofile_hdlr = logging.handlers.RotatingFileHandler(fname,
-            maxBytes=MAX_LOG_FILE_SIZE, backupCount=10)
-        hdlrs = (stderr_hdlr, rofile_hdlr)
+        # TODO take care of removing other handlers
+        stdlib_root_log = logging.getLogger()
+        stdlib_root_log.addHandler(StdlibStructlogHandler())
+        stdlib_root_log.setLevel(level)
 
-        for hdlr in hdlrs:
-            hdlr.setFormatter(self.LOG_FORMATTER)
-            log.addHandler(hdlr)
+        self._GLOBAL_LOG_CONFIGURED = True
 
-        log.addHandler(rofile_hdlr)
-        if not quiet: log.addHandler(stderr_hdlr)
+    def init_logger(self, levelname):
+        level = getattr(logging, levelname.upper())
+        self._configure_logger(level)
 
-        log.setLevel(getattr(logging, log_level.upper()))
+        # TODO bind relevant things to the basescript here ? name / hostname etc ?
+        log = structlog.get_logger()
+        log.setLevel(level)
 
+        # TODO functionality to change even the level of global stdlib logger.
         return log
 
     def define_subcommands(self, subcommands):
@@ -83,11 +102,8 @@ class BaseScript(object):
         '''
         parser.add_argument('--name', default=None,
             help='Name to identify this instance')
-        parser.add_argument('--log', default=None,
-            help='Name of log file')
         parser.add_argument('--log-level', default=self.LOG_LEVEL,
             help='Logging level as picked from the logging module')
-        parser.add_argument('--quiet', action='store_true')
 
     def define_args(self, parser):
         '''
@@ -107,3 +123,4 @@ class BaseScript(object):
         Override this method to define logic for `run` sub-command
         '''
         pass
+
