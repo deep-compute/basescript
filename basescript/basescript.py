@@ -5,6 +5,7 @@ import logging
 import argparse
 import socket
 import structlog
+from functools import wraps
 
 from .log import LevelLoggerFactory, BoundLevelLogger, StdlibStructlogHandler
 
@@ -46,19 +47,75 @@ class BaseScript(object):
     def name(self):
         return '.'.join([x for x in (sys.argv[0].split('.')[0], self.args.name) if x])
 
+    def define_log_processors(self):
+        """
+        log processors that structlog executes before final rendering
+        """
+        # these processors should accept logger, method_name and event_dict
+        # and return a new dictionary which will be passed as event_dict to the next one.
+        return [
+            structlog.stdlib.PositionalArgumentsFormatter(),
+            structlog.processors.StackInfoRenderer(),
+            structlog.processors.format_exc_info,
+        ]
+
+    def define_log_renderer(self):
+        """
+        the final log processor that structlog requires to render.
+        """
+        # it must accept a logger, method_name and event_dict (just like processors)
+        # but must return the rendered string, not a dictionary.
+        # TODO tty logic
+        return structlog.processors.JSONRenderer()
+
+    def define_log_pre_format_hooks(self):
+        """
+        these hooks are called before the log has been rendered, but after
+        all necessary filtering by log_processors has taken place.
+        they must accept a single argument which is a dictionary.
+        """
+        return []
+
+    def define_log_post_format_hooks(self):
+        """
+        these hooks are called after the log has been rendered using
+        the log renderer defined in `define_log_renderer`.
+        they must accept a single argument which is the output of the
+        renderer
+        """
+        # TODO remove this once structlog supports hooks or handlers
+        # these hooks accept a 'msg' and do not return anything
+        return []
+
     def _configure_logger(self, level):
         # NOTE not thread safe. Multiple BaseScripts cannot be instantiated concurrently.
         if self._GLOBAL_LOG_CONFIGURED:
             return
 
+        # TODO different processors for different basescripts ?
+        # TODO dynamically inject processors ?
+
+        # since the hooks need to run through structlog, need to wrap them like processors
+        def wrap_hook(fn):
+            @wraps(fn)
+            def processor(logger, method_name, event_dict):
+                fn(event_dict)
+                return event_dict
+
+            return processor
+
+        processors = self.define_log_processors()
+        processors.extend(
+            [ wrap_hook(h) for h in self.define_log_pre_format_hooks() ]
+        )
+        processors.append(self.define_log_renderer())
+        processors.extend(
+            [ wrap_hook(h) for h in self.define_log_post_format_hooks() ]
+        )
+
         # a global level struct log config unless otherwise specified.
         structlog.configure(
-            processors=[
-                structlog.stdlib.PositionalArgumentsFormatter(),
-                structlog.processors.StackInfoRenderer(),
-                structlog.processors.format_exc_info,
-                structlog.processors.JSONRenderer(),
-            ],
+            processors=processors,
             context_class=dict,
             logger_factory=LevelLoggerFactory(level=level),
             wrapper_class=BoundLevelLogger,
