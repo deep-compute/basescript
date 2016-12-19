@@ -1,14 +1,13 @@
 from setuptools import setup, find_packages
+import os
 
 long_description = ""
-try:
-    import pypandoc
-    long_description = pypandoc.convert('README.md', 'rst', format='markdown_github')
-except:
-    print """
-    README.md could not be converted to rst format.
-    Make sure pypandoc is installed.
-    """
+rst_readme = os.path.join(
+    os.path.dirname(__file__), "README.rst"
+)
+if os.path.exists(rst_readme):
+    with open(rst_readme) as fp:
+        long_description = rst_readme.read()
 
 version = '0.1.6'
 setup(
