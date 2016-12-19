@@ -9,10 +9,12 @@ class StdlibStructlogHandler(logging.Handler):
 
     def emit(self, record):
         kw = {
-            'fn': record.funcName,
-            'ln': record.lineno,
-            'module': record.module,
-            'file': record.pathname,
+            '_': {
+                'fn': record.funcName,
+                'ln': record.lineno,
+                'name': record.name,
+                'file': record.pathname,
+            },
             # to tell the structlog that there is no need to get the frames again
             '_frame_info': True,
         }
@@ -86,11 +88,14 @@ class BoundLevelLogger(BoundLoggerBase):
         filename = caller_frame.f_code.co_filename
         lineno = caller_frame.f_lineno
 
-        event_dict['fn'] = func
-        event_dict['ln'] = lineno
-        event_dict['module'] = module
-        # TODO os.path.join ?
-        event_dict['file'] = filename
+        event_dict.update({
+            "_": {
+                "fn": func,
+                "ln": lineno,
+                "name": module,
+                "file": filename,
+            },
+        })
         return event_dict
 
     def debug(self, event=None, *args, **kw):
