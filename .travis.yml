@@ -2,10 +2,12 @@ language: python
 python:
   - "2.7"
 install: 
-    - "pip install pypandoc"
     - "pip install ."
 script: 
   - echo "no tests yet"
+before_deploy:
+  - "sudo apt-get install pandoc"
+  - "pandoc --from=markdown --to=rst --output=$TRAVIS_BUILD_DIR/README.rst $TRAVIS_BUILD_DIR/README.md"
 deploy:
     # test pypi
   - provider: pypi
