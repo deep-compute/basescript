@@ -7,7 +7,8 @@ script:
   - echo "no tests yet"
 before_deploy:
   - "sudo apt-get install pandoc"
-  - "pandoc --from=markdown --to=rst --output=$TRAVIS_BUILD_DIR/README.rst $TRAVIS_BUILD_DIR/README.md"
+  - "echo `pwd`"
+  - "pandoc --from=markdown --to=rst --output=README.rst README.md"
 deploy:
     # test pypi
   - provider: pypi
