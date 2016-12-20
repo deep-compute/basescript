@@ -9,6 +9,7 @@ before_deploy:
   - "sudo apt-get install pandoc"
   - "echo `pwd`"
   - "pandoc --from=markdown --to=rst --output=README.rst README.md"
+  - "ls -alhrt README*"
 deploy:
     # test pypi
   - provider: pypi
