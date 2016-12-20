@@ -2,18 +2,20 @@ language: python
 python:
   - "2.7"
 install: 
-    - "pip install ."
+    - "pip -v install ."
 script: 
   - echo "no tests yet"
-before_deploy:
+before_install:
   - "sudo apt-get install pandoc"
   - "echo `pwd`"
-  - "pandoc --from=markdown --to=rst --output=README.rst README.md"
+  - "pandoc --from=markdown --to=rst --output=$TRAVIS_BUILD_DIR/README.rst README.md"
+  - "ls -alhrt README*"
 deploy:
     # test pypi
   - provider: pypi
     distributions: "sdist bdist_wheel"
     server: https://testpypi.python.org/pypi
+    skip_cleanup: true
     user: "deepcompute"
     password:
       secure: "fkHbFReSrTMDhMP1T26rlk0jVwmWyz8AkJqjThLWd0JBzxpAzLpeDCweCFuJk9hk1bnVnbJN/SgRBcRyYDkGCrarEtu3WkesGnIaqFKbMnu5Zwytex3ghPDK4ZK6+GVYSyljbYJUYXDZLMRoumiMOm7IHGVZ8soA02XNy7lBe36o5Dj3QfpRGUZLb2/nbMWIBvltecuhMk66yWKkSlwy0RjsOTn9XwjtTr5hGC6XD9kdC6NUeK6eSmdU/pa6DyOVSoKXEBims100g4gfOck5P8gXq8ssGVnWDkU9pvTKz085ayeepVDMygI5xug1U2zM3dTvTsRnsjr3B4FsAewfc9uh/sfFpr3v2oOIdUARf2sphJEja+0Z606s9DfxFMWHopouG9JDmzPwZBJNhJRIVW93VfODsUPejKtWJd259SfNRioj+ORP4b7wVQVfjvZM5CifDKrlMTBp1adt4bE8C/DepcezwgKLjRiGU0N0ndg7oJ9XcxUppzOwtEAPx0rLymWCz03O2gCXbr5NrtFZ/kbzPpMhDW1cnSW8zTzSQpzpXrqj5la+KIBynIp+EQZdxvM3NOyHFkpswOr1bsaFSmJ96ejrohIUq95FamQI6l8yo8iJiqROTLw6YUbcLa+F8qEP8ZdthPv98uV0ZAddduO9nysWzu2Hit3bXT4dQ3U="
@@ -23,6 +25,7 @@ deploy:
     # pypi
   - provider: pypi
     distributions: "sdist bdist_wheel"
+    skip_cleanup: true
     user: "deepcompute"
     password:
       secure: "fkHbFReSrTMDhMP1T26rlk0jVwmWyz8AkJqjThLWd0JBzxpAzLpeDCweCFuJk9hk1bnVnbJN/SgRBcRyYDkGCrarEtu3WkesGnIaqFKbMnu5Zwytex3ghPDK4ZK6+GVYSyljbYJUYXDZLMRoumiMOm7IHGVZ8soA02XNy7lBe36o5Dj3QfpRGUZLb2/nbMWIBvltecuhMk66yWKkSlwy0RjsOTn9XwjtTr5hGC6XD9kdC6NUeK6eSmdU/pa6DyOVSoKXEBims100g4gfOck5P8gXq8ssGVnWDkU9pvTKz085ayeepVDMygI5xug1U2zM3dTvTsRnsjr3B4FsAewfc9uh/sfFpr3v2oOIdUARf2sphJEja+0Z606s9DfxFMWHopouG9JDmzPwZBJNhJRIVW93VfODsUPejKtWJd259SfNRioj+ORP4b7wVQVfjvZM5CifDKrlMTBp1adt4bE8C/DepcezwgKLjRiGU0N0ndg7oJ9XcxUppzOwtEAPx0rLymWCz03O2gCXbr5NrtFZ/kbzPpMhDW1cnSW8zTzSQpzpXrqj5la+KIBynIp+EQZdxvM3NOyHFkpswOr1bsaFSmJ96ejrohIUq95FamQI6l8yo8iJiqROTLw6YUbcLa+F8qEP8ZdthPv98uV0ZAddduO9nysWzu2Hit3bXT4dQ3U="

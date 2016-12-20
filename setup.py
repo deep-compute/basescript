@@ -1,15 +1,29 @@
 from setuptools import setup, find_packages
 import os
 
-long_description = ""
-rst_readme = os.path.join(
-    os.path.dirname(__file__), "README.rst"
-)
-if os.path.exists(rst_readme):
-    with open(rst_readme) as fp:
-        long_description = rst_readme.read()
+HERE = os.path.abspath(os.path.dirname(__file__))
+def get_long_description():
+    dirs = [ HERE ]
+    if os.getenv("TRAVIS"):
+        dirs.append(os.getenv("TRAVIS_BUILD_DIR"))
 
-version = '0.1.6'
+    long_description = ""
+
+    for d in dirs:
+        rst_readme = os.path.join(d, "README.rst")
+        if not os.path.exists(rst_readme):
+            print "failed to find %s" % rst_readme
+            continue
+
+        print "found rst readme %s" % rst_readme
+        with open(rst_readme) as fp:
+            long_description = fp.read()
+
+    return long_description
+
+long_description = get_long_description()
+
+version = '0.1.7'
 setup(
     name="basescript",
     version=version,
@@ -23,6 +37,7 @@ setup(
     license='MIT License',
     install_requires=[
         "structlog",
+        "colorama",
     ],
     package_dir={'basescript': 'basescript'},
     packages=find_packages('.'),
