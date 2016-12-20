@@ -12,12 +12,11 @@ def get_long_description():
     for d in dirs:
         rst_readme = os.path.join(d, "README.rst")
         if not os.path.exists(rst_readme):
-            print "failed to find %s" % rst_readme
             continue
 
-        print "found rst readme %s" % rst_readme
         with open(rst_readme) as fp:
             long_description = fp.read()
+            return long_description
 
     return long_description
 
