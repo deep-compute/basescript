@@ -17,7 +17,7 @@ def get_long_description():
 
         print "found rst readme %s" % rst_readme
         with open(rst_readme) as fp:
-            long_description = rst_readme.read()
+            long_description = fp.read()
 
     return long_description
 
