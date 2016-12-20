@@ -2,11 +2,12 @@ from setuptools import setup, find_packages
 import os
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-long_description = ""
 def get_long_description():
     dirs = [ HERE ]
     if os.getenv("TRAVIS"):
         dirs.append(os.getenv("TRAVIS_BUILD_DIR"))
+
+    long_description = ""
 
     for d in dirs:
         rst_readme = os.path.join(d, "README.rst")
@@ -17,6 +18,10 @@ def get_long_description():
         print "found rst readme %s" % rst_readme
         with open(rst_readme) as fp:
             long_description = rst_readme.read()
+
+    return long_description
+
+long_description = get_long_description()
 
 version = '0.1.7'
 setup(
