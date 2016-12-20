@@ -2,17 +2,14 @@ language: python
 python:
   - "2.7"
 install: 
-    - "pip -v install ."
+    - "pip install ."
 script: 
   - echo "no tests yet"
-before_install:
+before_deploy:
   - "wget https://github.com/jgm/pandoc/releases/download/1.19.1/pandoc-1.19.1-1-amd64.deb -O $TRAVIS_BUILD_DIR/pandoc.deb"
   - "sudo dpkg -i $TRAVIS_BUILD_DIR/pandoc.deb"
   - "rm $TRAVIS_BUILD_DIR/pandoc.deb"
-  - "echo `pwd`"
-  - "pandoc --version"
   - "pandoc --from=markdown --to=rst --output=$TRAVIS_BUILD_DIR/README.rst README.md"
-  - "ls -alhrt README*"
 deploy:
     # test pypi
   - provider: pypi
