@@ -53,11 +53,20 @@ class BaseScript(object):
         """
         # these processors should accept logger, method_name and event_dict
         # and return a new dictionary which will be passed as event_dict to the next one.
-        return [
+
+        # NOTE if we are using a tty, then we must add our own timestamp.
+        processors = []
+
+        if sys.stderr.isatty():
+            processors.append(structlog.processors.TimeStamper(fmt="%Y-%m-%d %H:%M%S"))
+
+        processors.extend([
             structlog.stdlib.PositionalArgumentsFormatter(),
             structlog.processors.StackInfoRenderer(),
             structlog.processors.format_exc_info,
-        ]
+        ])
+
+        return processors
 
     def define_log_renderer(self):
         """
@@ -66,6 +75,16 @@ class BaseScript(object):
         # it must accept a logger, method_name and event_dict (just like processors)
         # but must return the rendered string, not a dictionary.
         # TODO tty logic
+        if self.args.log_format == "json":
+            return structlog.processors.JSONRenderer()
+
+        if self.args.log_format == "pretty":
+            return structlog.dev.ConsoleRenderer()
+
+        # log format is None, we need to guess from the tty
+        if sys.stderr.isatty():
+            return structlog.dev.ConsoleRenderer()
+
         return structlog.processors.JSONRenderer()
 
     def define_log_pre_format_hooks(self):
@@ -117,7 +136,7 @@ class BaseScript(object):
         structlog.configure(
             processors=processors,
             context_class=dict,
-            logger_factory=LevelLoggerFactory(level=level),
+            logger_factory=LevelLoggerFactory(stream=sys.stderr, level=level),
             wrapper_class=BoundLevelLogger,
             cache_logger_on_first_use=True,
         )
@@ -161,6 +180,13 @@ class BaseScript(object):
             help='Name to identify this instance')
         parser.add_argument('--log-level', default=self.LOG_LEVEL,
             help='Logging level as picked from the logging module')
+        parser.add_argument('--log-format', default=None,
+            # TODO add more formats
+            choices=("json", "pretty",),
+            help=("Force the format of the logs. By default, if the "
+                  "command is from a terminal, print colorful logs. "
+                  "Otherwise print json."),
+        )
 
     def define_args(self, parser):
         '''
