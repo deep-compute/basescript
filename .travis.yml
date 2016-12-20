@@ -5,10 +5,10 @@ install:
     - "pip -v install ."
 script: 
   - echo "no tests yet"
-before_deploy:
+before_install:
   - "sudo apt-get install pandoc"
   - "echo `pwd`"
-  - "pandoc --from=markdown --to=rst --output=README.rst README.md"
+  - "pandoc --from=markdown --to=rst --output=README.rst $TRAVIS_BUILD_DIR/README.md"
   - "ls -alhrt README*"
 deploy:
     # test pypi

@@ -2,19 +2,20 @@ from setuptools import setup, find_packages
 import os
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-
 long_description = ""
+def get_long_description():
+    dirs = [ HERE ]
+    if os.getenv("TRAVIS"):
+        dirs.append(os.getenv("TRAVIS_BUILD_DIR"))
 
-rst_readme = os.path.join(HERE, "README.rst")
-rst_readme = os.path.join(
-    os.path.dirname(__file__), "README.rst"
-)
-if os.path.exists(rst_readme):
-    print "found rst file %s" % rst_readme
-    with open(rst_readme) as fp:
-        long_description = rst_readme.read()
-else:
-    print "could not find rst file %s" % rst_readme
+    for d in dirs:
+        rst_readme = os.path.join(d, "README.rst")
+        if not os.path.exists(rst_readme):
+            continue
+
+        print "found rst readme %s" % rst_readme
+        with open(rst_readme) as fp:
+            long_description = rst_readme.read()
 
 version = '0.1.7'
 setup(
