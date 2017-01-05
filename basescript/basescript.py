@@ -35,6 +35,7 @@ class BaseScript(object):
         self.log = self.init_logger()
 
         args = { n: getattr(self.args, n) for n in vars(self.args) }
+        args['func'] = self.args.func.func_name
         self.log.debug("basescript init", **args)
 
     def start(self):
@@ -42,7 +43,15 @@ class BaseScript(object):
         Starts execution of the script
         '''
         # invoke the appropriate sub-command as requested from command-line
-        self.args.func()
+        try:
+            self.args.func()
+        except:
+            self.log.exception("exiting start function")
+            # set exit code so we know it did not end successfully
+            # TODO different exit codes based on signals ?
+            sys.exit(1)
+
+        self.log.info("exiting successfully")
 
     @property
     def name(self):
