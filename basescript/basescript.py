@@ -45,13 +45,19 @@ class BaseScript(object):
         # invoke the appropriate sub-command as requested from command-line
         try:
             self.args.func()
+        except SystemExit as e:
+            if e.code != 0:
+                raise
+        except KeyboardInterrupt:
+            self.log.warning("exited via keyboard interrupt")
+            sys.exit(1)
         except:
-            self.log.exception("exiting start function")
+            self.log.exception("exited start function")
             # set exit code so we know it did not end successfully
             # TODO different exit codes based on signals ?
             sys.exit(1)
 
-        self.log.info("exiting successfully")
+        self.log.info("exited successfully")
 
     @property
     def name(self):
