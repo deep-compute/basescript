@@ -1,13 +1,14 @@
 from __future__ import absolute_import
 
 import sys
+import atexit
 import logging
 import argparse
 import socket
 import structlog
 from functools import wraps
 
-from .log import LevelLoggerFactory, BoundLevelLogger, StdlibStructlogHandler
+from .log import LevelLoggerFactory, BoundLevelLogger, StdlibStructlogHandler, StderrConsoleRenderer, Stream
 
 class BaseScript(object):
     DESC = 'Base script abstraction'
@@ -31,9 +32,10 @@ class BaseScript(object):
         self.args = self.parser.parse_args()
 
         self.hostname = socket.gethostname()
-        self.log = self.init_logger(self.args.log_level)
+        self.log = self.init_logger()
 
         args = { n: getattr(self.args, n) for n in vars(self.args) }
+        args['func'] = self.args.func.func_name
         self.log.debug("basescript init", **args)
 
     def start(self):
@@ -41,7 +43,21 @@ class BaseScript(object):
         Starts execution of the script
         '''
         # invoke the appropriate sub-command as requested from command-line
-        self.args.func()
+        try:
+            self.args.func()
+        except SystemExit as e:
+            if e.code != 0:
+                raise
+        except KeyboardInterrupt:
+            self.log.warning("exited via keyboard interrupt")
+            sys.exit(1)
+        except:
+            self.log.exception("exited start function")
+            # set exit code so we know it did not end successfully
+            # TODO different exit codes based on signals ?
+            sys.exit(1)
+
+        self.log.info("exited successfully")
 
     @property
     def name(self):
@@ -54,13 +70,10 @@ class BaseScript(object):
         # these processors should accept logger, method_name and event_dict
         # and return a new dictionary which will be passed as event_dict to the next one.
 
-        # NOTE if we are using a tty, then we must add our own timestamp.
         processors = []
 
-        if sys.stderr.isatty():
-            processors.append(structlog.processors.TimeStamper(fmt="%Y-%m-%d %H:%M%S"))
-
         processors.extend([
+            structlog.processors.TimeStamper(fmt="iso"),
             structlog.stdlib.PositionalArgumentsFormatter(),
             structlog.processors.StackInfoRenderer(),
             structlog.processors.format_exc_info,
@@ -81,8 +94,10 @@ class BaseScript(object):
         if self.args.log_format == "pretty":
             return structlog.dev.ConsoleRenderer()
 
-        # log format is None, we need to guess from the tty
-        if sys.stderr.isatty():
+        if self.args.log_file is not None:
+            return structlog.processors.JSONRenderer()
+
+        if sys.stderr.isatty() and not self.args.quiet:
             return structlog.dev.ConsoleRenderer()
 
         return structlog.processors.JSONRenderer()
@@ -106,8 +121,10 @@ class BaseScript(object):
         # these hooks accept a 'msg' and do not return anything
         return []
 
-    def _configure_logger(self, level):
+    def _configure_logger(self):
         # NOTE not thread safe. Multiple BaseScripts cannot be instantiated concurrently.
+        level = getattr(logging, self.args.log_level.upper())
+
         if self._GLOBAL_LOG_CONFIGURED:
             return
 
@@ -127,16 +144,53 @@ class BaseScript(object):
         processors.extend(
             [ wrap_hook(h) for h in self.define_log_pre_format_hooks() ]
         )
-        processors.append(self.define_log_renderer())
+
+        log_renderer = self.define_log_renderer()
+        stderr_required = (not self.args.quiet)
+        pretty_to_stderr = (
+            stderr_required
+            and (
+                self.args.log_format == "pretty"
+                or (self.args.log_format is None and sys.stderr.isatty())
+            )
+        )
+
+        should_inject_pretty_renderer = (
+            pretty_to_stderr
+            and not isinstance(log_renderer, structlog.dev.ConsoleRenderer)
+        )
+        if should_inject_pretty_renderer:
+            stderr_required = False
+            processors.append(StderrConsoleRenderer())
+
+        processors.append(log_renderer)
         processors.extend(
             [ wrap_hook(h) for h in self.define_log_post_format_hooks() ]
         )
+
+        streams = []
+        # we need to use a stream if we are writing to both file and stderr, and both are json
+        if stderr_required:
+            streams.append(sys.stderr)
+
+        if self.args.log_file is not None:
+            # TODO handle creating a directory for this log file ?
+            # TODO set mode and encoding appropriately
+            streams.append(open(self.args.log_file, 'a'))
+
+        if len(streams) == 0:
+            # no logging configured at all
+            # TODO what do we do in such cases ?
+            return
+
+        stream = streams[0] if len(streams) == 1 else Stream(*streams)
+        atexit.register(stream.close)
 
         # a global level struct log config unless otherwise specified.
         structlog.configure(
             processors=processors,
             context_class=dict,
-            logger_factory=LevelLoggerFactory(stream=sys.stderr, level=level),
+            logger_factory=LevelLoggerFactory(stream, level=level),
             wrapper_class=BoundLevelLogger,
             cache_logger_on_first_use=True,
         )
@@ -148,12 +202,12 @@ class BaseScript(object):
 
         self._GLOBAL_LOG_CONFIGURED = True
 
-    def init_logger(self, levelname):
-        level = getattr(logging, levelname.upper())
-        self._configure_logger(level)
+    def init_logger(self):
+        self._configure_logger()
 
         # TODO bind relevant things to the basescript here ? name / hostname etc ?
         log = structlog.get_logger()
+        level = getattr(logging, self.args.log_level.upper())
         log.setLevel(level)
 
         # TODO functionality to change even the level of global stdlib logger.
@@ -186,6 +240,12 @@ class BaseScript(object):
             help=("Force the format of the logs. By default, if the "
                   "command is from a terminal, print colorful logs. "
                   "Otherwise print json."),
+        )
+        parser.add_argument('--log-file', default=None,
+            help='Writes logs to log file if specified, default: %(default)s',
+        )
+        parser.add_argument('--quiet', default=False, action="store_true",
+            help='if true, does not print logs to stderr, default: %(default)s',
         )
 
     def define_args(self, parser):

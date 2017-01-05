@@ -1,11 +1,52 @@
 import sys
 import logging
-from structlog import BoundLoggerBase, PrintLogger, get_logger
+import structlog
+
+class Stream(object):
+    def __init__(self, *streams):
+        self.streams = streams
+
+    def write(self, data):
+        print data
+        for s in self.streams:
+            s.write(data)
+
+    def flush(self):
+        for s in self.streams:
+            s.flush()
+
+    def close(self):
+        for s in self.streams:
+            s.close()
+
+class StderrConsoleRenderer(object):
+    BACKUP_KEYS = ("timestamp", "level", "event", "logger", "stack", "exception")
+    def __init__(self):
+        # TODO allow parameters to configure this
+        self.cr = structlog.dev.ConsoleRenderer()
+        self.pl = structlog.PrintLogger(file=sys.stderr)
+
+    def __call__(self, logger, method_name, event_dict):
+        # based on https://github.com/hynek/structlog/blob/master/src/structlog/dev.py
+        # since it pops data from event_dict, we need to add it back
+        backup = {}
+        for k in self.BACKUP_KEYS:
+            v = event_dict.get(k, None)
+            if v is None:
+                continue
+            backup[k] = v
+
+
+        msg = self.cr(logger, method_name, event_dict)
+        self.pl.msg(msg)
+
+        event_dict.update(backup)
+        return event_dict
 
 class StdlibStructlogHandler(logging.Handler):
     def __init__(self):
         super(StdlibStructlogHandler, self).__init__()
-        self._log = get_logger()
+        self._log = structlog.get_logger()
 
     def emit(self, record):
         kw = {
@@ -33,17 +74,13 @@ class StdlibStructlogHandler(logging.Handler):
 
 # Logger with an interface similar to python's standard library logger
 # to be used with structlog.PrintLoggerFactory
-class LevelLogger(PrintLogger):
-    def __init__(self, stream=None, level=None):
+class LevelLogger(structlog.PrintLogger):
+    def __init__(self, fp, level=None):
         """
         Creates a leveled logger with defaults
-        stream=sys.stderr
         level=logging.WARNING
         """
-        if stream is None:
-            stream = sys.stderr
-
-        super(LevelLogger, self).__init__(file=stream)
+        super(LevelLogger, self).__init__(file=fp)
 
         self.level = level or logging.WARNING
         assert isinstance(self.level, int), "expected int but got %r" % level
@@ -56,14 +93,14 @@ class LevelLogger(PrintLogger):
         return level >= self.level
 
 class LevelLoggerFactory(object):
-    def __init__(self, stream=None, level=None):
-        self.stream = stream
+    def __init__(self, fp, level=None):
+        self.fp = fp
         self.level = level
 
     def __call__(self, *args):
-        return LevelLogger(stream=self.stream, level=self.level)
+        return LevelLogger(self.fp, level=self.level)
 
-class BoundLevelLogger(BoundLoggerBase):
+class BoundLevelLogger(structlog.BoundLoggerBase):
     """
     Python Standard Library "like" version.
     Assumes that the factory is LevelLogger i.e. _logger is a LevelLogger.
