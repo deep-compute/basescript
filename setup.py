@@ -22,7 +22,7 @@ def get_long_description():
 
 long_description = get_long_description()
 
-version = '0.1.8'
+version = '0.1.9'
 setup(
     name="basescript",
     version=version,
@@ -35,11 +35,12 @@ setup(
     download_url="https://github.com/deep-compute/basescript/tarball/%s" % version,
     license='MIT License',
     install_requires=[
+        "pytz",
         "structlog",
         "colorama",
     ],
     package_dir={'basescript': 'basescript'},
-    packages=find_packages('.'),
+    packages=find_packages('.', exclude=['tests*']),
     include_package_data=True,
     classifiers=[
         "Programming Language :: Python :: 2.7",
