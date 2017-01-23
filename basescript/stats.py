@@ -391,7 +391,7 @@ class Stats(object):
             influxdb_protocol_lines = self.dump_stats()
             # TODO chunk the lines appropriately ?
             if len(influxdb_protocol_lines) != 0:
-                self.log.info("periodic metrics", metrics=influxdb_protocol_lines)
+                self.log._dump_stats(influxdb_protocol_lines)
 
             time.sleep(interval_s)
 

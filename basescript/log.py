@@ -197,7 +197,7 @@ class BoundLevelLogger(structlog.BoundLoggerBase):
         Process event and call :meth:`logging.Logger.error` with the result,
         after setting ``exc_info`` to `True`.
         """
-        if not self._logger.isEnabledFor(logging.exception):
+        if not self._logger.isEnabledFor(logging.ERROR):
             return
 
         kw = self._add_base_info(kw)
@@ -205,6 +205,14 @@ class BoundLevelLogger(structlog.BoundLoggerBase):
         kw.setdefault('exc_info', True)
         kw['_frame_info'] = True
         return self.error(event, *args, **kw)
+
+    def _dump_stats(self, metrics):
+        """
+        Dumps metrics irrespective of log level
+        """
+        # TODO have a feature to silence metrics as well
+        # TODO if dumping to console, we shouldn't club metrics. It should be sent one by one on each line.
+        return self._proxy_to_logger('msg', 'periodic metrics', metrics=metrics, level='info')
 
     fatal = critical
 
