@@ -206,13 +206,13 @@ class BoundLevelLogger(structlog.BoundLoggerBase):
         kw['_frame_info'] = True
         return self.error(event, *args, **kw)
 
-    def _dump_stats(self, metrics):
+    def _dump_stats(self, metric):
         """
         Dumps metrics irrespective of log level
         """
         # TODO have a feature to silence metrics as well
         # TODO if dumping to console, we shouldn't club metrics. It should be sent one by one on each line.
-        return self._proxy_to_logger('msg', 'periodic metrics', metrics=metrics, level='info')
+        return self._proxy_to_logger('msg', metric, influx_metric=True, level='info')
 
     fatal = critical
 

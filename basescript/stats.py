@@ -389,9 +389,8 @@ class Stats(object):
         while True:
             # TODO is try except needed ?
             influxdb_protocol_lines = self.dump_stats()
-            # TODO chunk the lines appropriately ?
-            if len(influxdb_protocol_lines) != 0:
-                self.log._dump_stats(influxdb_protocol_lines)
+            for line in influxdb_protocol_lines:
+                self.log._dump_stats(line)
 
             time.sleep(interval_s)
 
