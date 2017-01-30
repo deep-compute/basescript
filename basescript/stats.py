@@ -309,14 +309,25 @@ class Stats(object):
     # stats are dumped given the dump interval
     DUMP_INTERVAL = datetime.timedelta(seconds=1)
 
-    def __init__(self, log, thread_safe=False):
+    def __init__(self, log, thread_safe=False, **tags):
         self.log = log
 
         self.lock = Lock()
         self.series_map = {}
         self.thread_safe = thread_safe
 
+        # tags that must always be appended to a measurement
+        # example hostname
+        self.tags = { k:v for k,v in tags.iteritems()
+            if isinstance(v, basestring) and len(v) > 0
+        }
+
     def measure(self, measurement, **tags):
+        # NOTE incase of conflict, the global tags take preference.
+        # hostname cannot be overridden by a measure.
+        # TODO log errors in case of conflict
+        tags.update(self.tags)
+
         series_key = Series.make_series_key(measurement, **tags)
 
         self.lock.acquire()
