@@ -224,7 +224,7 @@ class BaseScript(object):
         # TODO functionality to change even the level of global stdlib logger.
         return log
 
-    def define_basescript_metric_tags(self):
+    def define_metric_tags(self):
         """
         the tags (dictionary {str: str}) returned by this function
         must be present in every metric that basescript emits.
@@ -232,7 +232,7 @@ class BaseScript(object):
         return { "host": self.hostname, "name": self.name }
 
     def init_stats(self):
-        basescript_tags = self.define_basescript_metric_tags()
+        basescript_tags = self.define_metric_tags()
         stats = Stats(self.log, thread_safe=self.THREAD_SAFE_STATS, **basescript_tags)
 
         self.dump_stats_thread = Thread(
