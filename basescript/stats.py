@@ -378,8 +378,9 @@ class Stats(object):
             if (now - series._last_accessed_time) >= dormant_duration :
                 keys_to_del.append(series_key)
 
+        # TODO unittest periodic deletion of keys
         for k in keys_to_del:
-            del(series_key)
+            del self.series_map[k]
 
         self.lock.release()
 
