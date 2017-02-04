@@ -6,9 +6,12 @@ import logging
 import argparse
 import socket
 import structlog
+from datetime import timedelta
 from functools import wraps
+from threading import Thread
 
 from .log import LevelLoggerFactory, BoundLevelLogger, StdlibStructlogHandler, StderrConsoleRenderer, Stream
+from .stats import Stats
 
 class BaseScript(object):
     DESC = 'Base script abstraction'
@@ -16,6 +19,12 @@ class BaseScript(object):
 
     # stdlib to structlog handlers should be configured only once.
     _GLOBAL_LOG_CONFIGURED = False
+
+    # acquires and releases locks for every metric captured
+    THREAD_SAFE_STATS = True
+
+    # periodic interval to dump stats
+    DUMP_STATS_INTERVAL = timedelta(seconds=1)
 
     def __init__(self):
         # argparse parser obj
@@ -37,6 +46,8 @@ class BaseScript(object):
         args = { n: getattr(self.args, n) for n in vars(self.args) }
         args['func'] = self.args.func.func_name
         self.log.debug("basescript init", **args)
+
+        self.stats = self.init_stats()
 
     def start(self):
         '''
@@ -212,6 +223,25 @@ class BaseScript(object):
 
         # TODO functionality to change even the level of global stdlib logger.
         return log
+
+    def define_metric_tags(self):
+        """
+        the tags (dictionary {str: str}) returned by this function
+        must be present in every metric that basescript emits.
+        """
+        return { "host": self.hostname, "name": self.name }
+
+    def init_stats(self):
+        basescript_tags = self.define_metric_tags()
+        stats = Stats(self.log, thread_safe=self.THREAD_SAFE_STATS, **basescript_tags)
+
+        self.dump_stats_thread = Thread(
+            target=stats.dump_stats_periodically,
+            kwargs={ 'interval': self.DUMP_STATS_INTERVAL },
+        )
+        self.dump_stats_thread.daemon = True
+        self.dump_stats_thread.start()
+        return stats
 
     def define_subcommands(self, subcommands):
         '''
