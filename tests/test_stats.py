@@ -88,6 +88,20 @@ class TestSeries(unittest.TestCase):
         expected = "my_measurement,alpha_tag=xyz,beta=aaa,mytag1=abcd,mytag2=defg,num_tag=123"
         self.assertEqual(series_key, expected)
 
+    def test_gen_series_key_with_tag_value_none(self):
+        series_key = basescript.stats.Series.make_series_key("my_measurement",
+            mytag1="abcd", mytag2=None, mytag3="xyz",
+        )
+        expected = "my_measurement,mytag1=abcd,mytag3=xyz"
+        self.assertEqual(series_key, expected)
+
+    def test_gen_series_key_with_tag_value_false(self):
+        series_key = basescript.stats.Series.make_series_key("my_measurement",
+            mytag1="abcd", mytag2=False, mytag3="xyz",
+        )
+        expected = "my_measurement,mytag1=abcd,mytag2=False,mytag3=xyz"
+        self.assertEqual(series_key, expected)
+
     def _test_last_accessed_times_in_non_decreasing_order(self, lats):
         # all the last_accessed_times must be in increasing order starting with None
         for i in xrange(0, len(lats) - 1):
