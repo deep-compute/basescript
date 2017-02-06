@@ -81,12 +81,13 @@ class Series(object):
         """
         creates the key to make a series
         a series is a combination of retention policy, measurement and tags
+        NOTE: ignores tags who's values are None
         """
         # TODO include retention policy in the series key creation ?
         if len(tags) == 0:
             return measurement
 
-        tags_srtd = sorted([ '%s=%s' % (k,v) for k,v in tags.iteritems() ])
+        tags_srtd = sorted([ '%s=%s' % (k,v) for k,v in tags.iteritems() if v is not None ])
         tags_str = ','.join(tags_srtd)
         # TODO if relying on this format later, make sure k,v do not have spaces or commas
 
