@@ -1,4 +1,9 @@
-# Base Script [![Build Status][travis-ci_status_img]][travis-ci_basescript]
+Base Script
+===========
+
+[![Build Status](https://travis-ci.org/deep-compute/basescript.svg?branch=master)](https://travis-ci.org/deep-compute/basescript)
+[![PyPI version](https://badge.fury.io/py/basescript.svg)](https://badge.fury.io/py/basescript)
+
 
 Python is an excellent language that makes writing scripts very straightforward. Over the course of writing many scripts, we realized that we were doing some things over and over like creating a logger and accepting command line arguments. Base script is a very simple abstraction that takes care of setting up logging and other basics so you can focus on your application specific logic.
 
@@ -132,7 +137,3 @@ https://docs.python.org/2/library/logging.html#logging-levels.
 
 `log` is a log object created using python's standard `logging` module. You can
 read more about it at https://docs.python.org/2/library/logging.html.
-
-
-[travis-ci_status_img]: https://travis-ci.org/deep-compute/basescript.svg?branch=master
-[travis-ci_basescript]: https://travis-ci.org/deep-compute/basescript
