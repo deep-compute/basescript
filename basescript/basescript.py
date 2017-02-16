@@ -12,6 +12,7 @@ from threading import Thread
 
 from .log import LevelLoggerFactory, BoundLevelLogger, StdlibStructlogHandler, StderrConsoleRenderer, Stream
 from .stats import Stats
+from .utils import Dummy
 
 class BaseScript(object):
     DESC = 'Base script abstraction'
@@ -133,6 +134,10 @@ class BaseScript(object):
         return []
 
     def _configure_logger(self):
+        """
+        configures a logger when required write to stderr or a file
+        """
+
         # NOTE not thread safe. Multiple BaseScripts cannot be instantiated concurrently.
         level = getattr(logging, self.args.log_level.upper())
 
@@ -189,10 +194,7 @@ class BaseScript(object):
             # TODO set mode and encoding appropriately
             streams.append(open(self.args.log_file, 'a'))
 
-        if len(streams) == 0:
-            # no logging configured at all
-            # TODO what do we do in such cases ?
-            return
+        assert len(streams) != 0, "cannot configure logger for 0 streams"
 
         stream = streams[0] if len(streams) == 1 else Stream(*streams)
         atexit.register(stream.close)
@@ -214,6 +216,10 @@ class BaseScript(object):
         self._GLOBAL_LOG_CONFIGURED = True
 
     def init_logger(self):
+        if self.args.quiet and self.args.log_file is None:
+            # no need for a log - return a dummy
+            return Dummy()
+
         self._configure_logger()
 
         # TODO bind relevant things to the basescript here ? name / hostname etc ?
