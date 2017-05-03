@@ -88,6 +88,13 @@ class TestSeries(unittest.TestCase):
         expected = "my_measurement,alpha_tag=xyz,beta=aaa,mytag1=abcd,mytag2=defg,num_tag=123"
         self.assertEqual(series_key, expected)
 
+    def test_gen_series_key_special_chars_in_tag(self):
+        series_key = basescript.stats.Series.make_series_key("my measurement", tag_a="aTagWith Spaces",
+            tag_b="an=inthetag", tag_c="a,inthetag",
+        )
+        expected = "mymeasurement,tag_a=aTagWithSpaces,tag_b=aninthetag,tag_c=ainthetag"
+        self.assertEqual(series_key, expected)
+
     def test_gen_series_key_with_tag_value_none(self):
         series_key = basescript.stats.Series.make_series_key("my_measurement",
             mytag1="abcd", mytag2=None, mytag3="xyz",

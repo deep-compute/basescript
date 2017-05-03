@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import re
 import time
 import datetime
 from threading import Lock
@@ -50,6 +51,11 @@ def _convert_timestamp(timestamp, precision='ms'):
 
     raise ValueError("unknown precision %s" % precision)
 
+# the following need to be escaped for influx line protocol
+# https://docs.influxdata.com/influxdb/v1.2/write_protocols/line_protocol_reference/#special-characters
+CLEAN_SERIES_KEY_RE = re.compile(r'[",= ]')
+CLEAN_STR = lambda x: CLEAN_SERIES_KEY_RE.sub('', x) if isinstance(x, basestring) else x
+
 class Series(object):
     """
     metrics for a particular series.
@@ -82,16 +88,24 @@ class Series(object):
         creates the key to make a series
         a series is a combination of retention policy, measurement and tags
         NOTE: ignores tags who's values are None
+
+        >>> Series.make_series_key("my_measurement", tag_b="valueB", tag_a="valueA", tag_c=None)
+        my_measurement,tag_a=valueA,tag_b=valueB
+        >>> Series.make_series_key("My Measurement", tag_b="tag with spaces", tag_a="t,a,g")
+        MyMeasurement,tag_a=tag,tag_b=tagwithspaces
         """
         # TODO include retention policy in the series key creation ?
         if len(tags) == 0:
-            return measurement
+            return CLEAN_STR(measurement)
 
-        tags_srtd = sorted([ '%s=%s' % (k,v) for k,v in tags.iteritems() if v is not None ])
+        tags_srtd = sorted([
+            '%s=%s' % (k, CLEAN_STR(v))
+            for k,v in tags.iteritems() if v is not None
+        ])
         tags_str = ','.join(tags_srtd)
         # TODO if relying on this format later, make sure k,v do not have spaces or commas
 
-        series = '%s,%s' % (measurement, tags_str)
+        series = '%s,%s' % (CLEAN_STR(measurement), tags_str)
         return series.strip()
 
     def fields(self, **fields):
@@ -168,8 +182,11 @@ class Series(object):
         """
 
         fields = []
-        fields.extend('%s=%s' % (k,v) for k,v in self._fields.iteritems())
-        fields.extend('c_%s=%s' % (k,v) for k,v in self._counters.iteritems())
+        # if a field value is a string, it should be wrapped in "double quotes"
+        wrap = lambda x: '"%s"' % x if isinstance(x, basestring) else x
+        fields.extend('%s=%s' % (k, wrap(v)) for k,v in self._fields.iteritems())
+        # no need to wrap counts,guages and timers since we assume them to be numbers
+        fields.extend('c_%s=%s' % (k, v) for k,v in self._counters.iteritems())
         fields.extend('g_%s=%s' % (k, v) for k,v in self._gauges.iteritems())
 
         for timer_name, timer_values in self._timers.iteritems():
