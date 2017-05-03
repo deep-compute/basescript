@@ -88,6 +88,11 @@ class Series(object):
         creates the key to make a series
         a series is a combination of retention policy, measurement and tags
         NOTE: ignores tags who's values are None
+
+        >>> Series.make_series_key("my_measurement", tag_b="valueB", tag_a="valueA", tag_c=None)
+        my_measurement,tag_a=valueA,tag_b=valueB
+        >>> Series.make_series_key("My Measurement", tag_b="tag with spaces", tag_a="t,a,g")
+        MyMeasurement,tag_a=tag,tag_b=tagwithspaces
         """
         # TODO include retention policy in the series key creation ?
         if len(tags) == 0:
