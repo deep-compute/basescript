@@ -1,12 +1,13 @@
 from __future__ import absolute_import
 
 import sys
+import uuid
 import atexit
 import logging
 import argparse
 import socket
 import structlog
-from datetime import timedelta
+from datetime import timedelta, datetime
 from functools import wraps
 from threading import Thread
 
@@ -75,6 +76,14 @@ class BaseScript(object):
     def name(self):
         return '.'.join([x for x in (sys.argv[0].split('.')[0], self.args.name) if x])
 
+    def _structlog_uniqueid_processor(self, logger_class, log_method, event):
+        ''' Attach a unique id per event '''
+        event['id'] = '%s_%s' % (
+                datetime.utcnow().strftime('%Y%m%dT%H%M%S'),
+                uuid.uuid1()
+        )
+        return event
+
     def define_log_processors(self):
         """
         log processors that structlog executes before final rendering
@@ -86,6 +95,7 @@ class BaseScript(object):
 
         processors.extend([
             structlog.processors.TimeStamper(fmt="iso"),
+            self._structlog_uniqueid_processor,
             structlog.stdlib.PositionalArgumentsFormatter(),
             structlog.processors.StackInfoRenderer(),
             structlog.processors.format_exc_info,
