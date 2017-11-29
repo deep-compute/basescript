@@ -212,7 +212,7 @@ class BoundLevelLogger(structlog.BoundLoggerBase):
         """
         # TODO have a feature to silence metrics as well
         # TODO if dumping to console, we shouldn't club metrics. It should be sent one by one on each line.
-        return self._proxy_to_logger('msg', metric, influx_metric=True, level='info')
+        return self._proxy_to_logger('msg', metric, type='metric', level='info')
 
     fatal = critical
 
