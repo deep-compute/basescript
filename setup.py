@@ -22,7 +22,7 @@ def get_long_description():
 
 long_description = get_long_description()
 
-version = '0.1.11'
+version = '0.1.12'
 setup(
     name="basescript",
     version=version,
