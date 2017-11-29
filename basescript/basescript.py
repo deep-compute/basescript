@@ -78,10 +78,16 @@ class BaseScript(object):
 
     def _structlog_uniqueid_processor(self, logger_class, log_method, event):
         ''' Attach a unique id per event '''
-        event['id'] = '%s_%s' % (
-                datetime.utcnow().strftime('%Y%m%dT%H%M%S'),
-                uuid.uuid1()
-        )
+        if 'id' not in event:
+            event['id'] = '%s_%s' % (
+                    datetime.utcnow().strftime('%Y%m%dT%H%M%S'),
+                    uuid.uuid1()
+            )
+        return event
+
+    def _structlog_logtype_processor(self, logger_class, log_method, event):
+        if 'type' not in event:
+            event['type'] = 'log'
         return event
 
     def define_log_processors(self):
@@ -96,6 +102,7 @@ class BaseScript(object):
         processors.extend([
             structlog.processors.TimeStamper(fmt="iso"),
             self._structlog_uniqueid_processor,
+            self._structlog_logtype_processor,
             structlog.stdlib.PositionalArgumentsFormatter(),
             structlog.processors.StackInfoRenderer(),
             structlog.processors.format_exc_info,
