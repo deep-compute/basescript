@@ -81,7 +81,7 @@ class BaseScript(object):
         if 'id' not in event:
             event['id'] = '%s_%s' % (
                     datetime.utcnow().strftime('%Y%m%dT%H%M%S'),
-                    uuid.uuid1()
+                    uuid.uuid1().hex
             )
         return event
 
