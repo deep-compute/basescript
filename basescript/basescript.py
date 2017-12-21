@@ -28,7 +28,7 @@ class BaseScript(object):
     # periodic interval to dump stats
     DUMP_STATS_INTERVAL = timedelta(seconds=1)
 
-    def __init__(self):
+    def __init__(self, args=None):
         # argparse parser obj
         self.parser = argparse.ArgumentParser(description=self.DESC)
         self.define_baseargs(self.parser)
@@ -40,7 +40,7 @@ class BaseScript(object):
 
         self.define_args(self.subcommand_run)
 
-        self.args = self.parser.parse_args()
+        self.args = self.parser.parse_args(args=args)
 
         self.hostname = socket.gethostname()
         self.log = self.init_logger()
