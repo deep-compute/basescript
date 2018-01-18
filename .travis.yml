@@ -5,8 +5,6 @@ install:
   - "pip install ."
   # consider using tox. do we need to install
   - "pip install unittest2"
-#script:
-#  - "unit2 discover tests"
 before_deploy:
   - "wget https://github.com/jgm/pandoc/releases/download/1.19.1/pandoc-1.19.1-1-amd64.deb -O $TRAVIS_BUILD_DIR/pandoc.deb"
   - "sudo dpkg -i $TRAVIS_BUILD_DIR/pandoc.deb"
