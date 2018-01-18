@@ -12,7 +12,7 @@ from functools import wraps
 from threading import Thread
 
 from .log import LevelLoggerFactory, BoundLevelLogger, StdlibStructlogHandler, StderrConsoleRenderer, Stream
-from .utils import Dummy #FIXME: delete this code and use deeputil.Dummy
+from .utils import Dummy # FIXME: delete this code and use deeputil.Dummy
 
 class BaseScript(object):
     DESC = 'Base script abstraction'
