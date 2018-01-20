@@ -1,37 +1,54 @@
 language: python
 python:
-  - "2.7"
-install: 
-  - "pip install ."
-  # consider using tox. do we need to install
-  - "pip install unittest2"
+- '2.7'
+install:
+- pip install .
+- pip install unittest2
 script:
-  - echo "No tests"
+- echo "No tests"
 before_deploy:
-  - "wget https://github.com/jgm/pandoc/releases/download/1.19.1/pandoc-1.19.1-1-amd64.deb -O $TRAVIS_BUILD_DIR/pandoc.deb"
-  - "sudo dpkg -i $TRAVIS_BUILD_DIR/pandoc.deb"
-  - "rm $TRAVIS_BUILD_DIR/pandoc.deb"
-  - "pandoc --from=markdown --to=rst --output=$TRAVIS_BUILD_DIR/README.rst README.md"
+- wget https://github.com/jgm/pandoc/releases/download/1.19.1/pandoc-1.19.1-1-amd64.deb
+  -O $TRAVIS_BUILD_DIR/pandoc.deb
+- sudo dpkg -i $TRAVIS_BUILD_DIR/pandoc.deb
+- rm $TRAVIS_BUILD_DIR/pandoc.deb
+- pandoc --from=markdown --to=rst --output=$TRAVIS_BUILD_DIR/README.rst README.md
 deploy:
-    # test pypi
-  - provider: pypi
-    distributions: "sdist bdist_wheel"
-    server: https://testpypi.python.org/pypi
-    skip_cleanup: true
-    user: "deepcompute"
-    password:
-      secure: "fkHbFReSrTMDhMP1T26rlk0jVwmWyz8AkJqjThLWd0JBzxpAzLpeDCweCFuJk9hk1bnVnbJN/SgRBcRyYDkGCrarEtu3WkesGnIaqFKbMnu5Zwytex3ghPDK4ZK6+GVYSyljbYJUYXDZLMRoumiMOm7IHGVZ8soA02XNy7lBe36o5Dj3QfpRGUZLb2/nbMWIBvltecuhMk66yWKkSlwy0RjsOTn9XwjtTr5hGC6XD9kdC6NUeK6eSmdU/pa6DyOVSoKXEBims100g4gfOck5P8gXq8ssGVnWDkU9pvTKz085ayeepVDMygI5xug1U2zM3dTvTsRnsjr3B4FsAewfc9uh/sfFpr3v2oOIdUARf2sphJEja+0Z606s9DfxFMWHopouG9JDmzPwZBJNhJRIVW93VfODsUPejKtWJd259SfNRioj+ORP4b7wVQVfjvZM5CifDKrlMTBp1adt4bE8C/DepcezwgKLjRiGU0N0ndg7oJ9XcxUppzOwtEAPx0rLymWCz03O2gCXbr5NrtFZ/kbzPpMhDW1cnSW8zTzSQpzpXrqj5la+KIBynIp+EQZdxvM3NOyHFkpswOr1bsaFSmJ96ejrohIUq95FamQI6l8yo8iJiqROTLw6YUbcLa+F8qEP8ZdthPv98uV0ZAddduO9nysWzu2Hit3bXT4dQ3U="
-    on:
-      branch: master
-      tags: false
-    # pypi
-  - provider: pypi
-    distributions: "sdist bdist_wheel"
-    skip_cleanup: true
-    user: "deepcompute"
-    password:
-      secure: "fkHbFReSrTMDhMP1T26rlk0jVwmWyz8AkJqjThLWd0JBzxpAzLpeDCweCFuJk9hk1bnVnbJN/SgRBcRyYDkGCrarEtu3WkesGnIaqFKbMnu5Zwytex3ghPDK4ZK6+GVYSyljbYJUYXDZLMRoumiMOm7IHGVZ8soA02XNy7lBe36o5Dj3QfpRGUZLb2/nbMWIBvltecuhMk66yWKkSlwy0RjsOTn9XwjtTr5hGC6XD9kdC6NUeK6eSmdU/pa6DyOVSoKXEBims100g4gfOck5P8gXq8ssGVnWDkU9pvTKz085ayeepVDMygI5xug1U2zM3dTvTsRnsjr3B4FsAewfc9uh/sfFpr3v2oOIdUARf2sphJEja+0Z606s9DfxFMWHopouG9JDmzPwZBJNhJRIVW93VfODsUPejKtWJd259SfNRioj+ORP4b7wVQVfjvZM5CifDKrlMTBp1adt4bE8C/DepcezwgKLjRiGU0N0ndg7oJ9XcxUppzOwtEAPx0rLymWCz03O2gCXbr5NrtFZ/kbzPpMhDW1cnSW8zTzSQpzpXrqj5la+KIBynIp+EQZdxvM3NOyHFkpswOr1bsaFSmJ96ejrohIUq95FamQI6l8yo8iJiqROTLw6YUbcLa+F8qEP8ZdthPv98uV0ZAddduO9nysWzu2Hit3bXT4dQ3U="
-    on:
-      branch: master
-      # only when there is a release it will update pypi
-      tags: true
+- provider: releases
+  skip_cleanup: true
+  api_key:
+    secure: I1fed3u9oQff9pskIpW72Vwbl8EqX/BFpNT+Upqhx2sTEXJnmaj9yXunflT1nHRpWCl+jIsJ8iYYuOegiDWfZrcs7AgXobCKOCXj98GLX3qknkZ4raDC1lwhHHNOkvMzjARQYURFIRvDPk8vyg9rLHqzqKhgPyeByJL34UfQv/eBuYDXbvty88FefHmHRmIPJxDGQskdhic09uEkVLI7Nx1ay5a9BnyvcZ1IglqQRTj3yW7XOhlxYxWiTcO3ksOs4DKqciJ6sARyh09Qj0Zo5MD3+qKGLvBKAlHK1RHYWrbekwELxCGm0AOrI6GqaboEVC1OMHU+xmMYUk39yvCVc17ypHgu4ne81XnRA/ISzx6ymCUay03PRV3PBDPV8PKXktQEnmTg37FE0/NYJDmT1T7odjDooAJw2gLpbJQOY7ut4bXeoYgHzOiHzcJvO1s8DL7O000rQTqRMXIpQm7OiYYJ4I9NPUj2lGWKbi6jeALqfGWOvUxeQkneiNct0+s6PNyOZMfvvqbSODju8D3WKvA0p8QDqNa3uzI+RRswOJNYNP+0RnynAZ+vaX5Xk1AS5XriZaf2v7rHDIl8carGZy8G/tuP3UbfUzmE+V8CHmzNa4aQ3uHAJbrJBf/ZzIqF0KCq8g2PvM4xwJwOimsAPVi1f/oiMLxQTN7RVME8R+o=
+  file:
+    - LICENSE
+    - README.md
+    - setup.py
+    - basescript/basescript.py
+    - basescript/__init__.py
+    - basescript/log.py
+    - basescript/utils.py
+    - examples/adder.py
+    - examples/helloworld.py
+  name: basescript-0.1.17
+  tag_name: 0.1.17
+  on:
+    repo: deep-compute/basescript
+- provider: pypi
+  distributions: "sdist bdist_wheel"
+  server: https://testpypi.python.org/pypi
+  skip_cleanup: true
+  user: "deepcompute"
+  password:
+    secure: "fkHbFReSrTMDhMP1T26rlk0jVwmWyz8AkJqjThLWd0JBzxpAzLpeDCweCFuJk9hk1bnVnbJN/SgRBcRyYDkGCrarEtu3WkesGnIaqFKbMnu5Zwytex3ghPDK4ZK6+GVYSyljbYJUYXDZLMRoumiMOm7IHGVZ8soA02XNy7lBe36o5Dj3QfpRGUZLb2/nbMWIBvltecuhMk66yWKkSlwy0RjsOTn9XwjtTr5hGC6XD9kdC6NUeK6eSmdU/pa6DyOVSoKXEBims100g4gfOck5P8gXq8ssGVnWDkU9pvTKz085ayeepVDMygI5xug1U2zM3dTvTsRnsjr3B4FsAewfc9uh/sfFpr3v2oOIdUARf2sphJEja+0Z606s9DfxFMWHopouG9JDmzPwZBJNhJRIVW93VfODsUPejKtWJd259SfNRioj+ORP4b7wVQVfjvZM5CifDKrlMTBp1adt4bE8C/DepcezwgKLjRiGU0N0ndg7oJ9XcxUppzOwtEAPx0rLymWCz03O2gCXbr5NrtFZ/kbzPpMhDW1cnSW8zTzSQpzpXrqj5la+KIBynIp+EQZdxvM3NOyHFkpswOr1bsaFSmJ96ejrohIUq95FamQI6l8yo8iJiqROTLw6YUbcLa+F8qEP8ZdthPv98uV0ZAddduO9nysWzu2Hit3bXT4dQ3U="
+  on:
+    branch: master
+    tags: false
+  # pypi
+- provider: pypi
+  distributions: "sdist bdist_wheel"
+  skip_cleanup: true
+  user: "deepcompute"
+  password: 
+    secure: "fkHbFReSrTMDhMP1T26rlk0jVwmWyz8AkJqjThLWd0JBzxpAzLpeDCweCFuJk9hk1bnVnbJN/SgRBcRyYDkGCrarEtu3WkesGnIaqFKbMnu5Zwytex3ghPDK4ZK6+GVYSyljbYJUYXDZLMRoumiMOm7IHGVZ8soA02XNy7lBe36o5Dj3QfpRGUZLb2/nbMWIBvltecuhMk66yWKkSlwy0RjsOTn9XwjtTr5hGC6XD9kdC6NUeK6eSmdU/pa6DyOVSoKXEBims100g4gfOck5P8gXq8ssGVnWDkU9pvTKz085ayeepVDMygI5xug1U2zM3dTvTsRnsjr3B4FsAewfc9uh/sfFpr3v2oOIdUARf2sphJEja+0Z606s9DfxFMWHopouG9JDmzPwZBJNhJRIVW93VfODsUPejKtWJd259SfNRioj+ORP4b7wVQVfjvZM5CifDKrlMTBp1adt4bE8C/DepcezwgKLjRiGU0N0ndg7oJ9XcxUppzOwtEAPx0rLymWCz03O2gCXbr5NrtFZ/kbzPpMhDW1cnSW8zTzSQpzpXrqj5la+KIBynIp+EQZdxvM3NOyHFkpswOr1bsaFSmJ96ejrohIUq95FamQI6l8yo8iJiqROTLw6YUbcLa+F8qEP8ZdthPv98uV0ZAddduO9nysWzu2Hit3bXT4dQ3U="
+  on:
+    branch: master
+    # only when there is a release it will update pypi
+    tags: true
