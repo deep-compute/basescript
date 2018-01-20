@@ -16,7 +16,7 @@ class Adder(BaseScript):
     def run(self):
         self.log.info("Starting run of script ...")
 
-        print self.a + self.b + self.args.c
+        print (self.a + self.b + self.args.c)
 
         self.log.info("Script is done")
 

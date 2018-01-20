@@ -40,7 +40,7 @@ class BaseScript(object):
         self.stats = Dummy()
 
         args = { n: getattr(self.args, n) for n in vars(self.args) }
-        args['func'] = self.args.func.func_name
+        args['func'] = self.args.func.__name__
         self.log.debug("basescript init", **args)
 
     def start(self):
