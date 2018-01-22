@@ -7,7 +7,7 @@ class Stream(object):
         self.streams = streams
 
     def write(self, data):
-        print data
+        print (data)
         for s in self.streams:
             s.write(data)
 
