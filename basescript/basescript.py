@@ -27,6 +27,7 @@ class BaseScript(object):
         self.define_baseargs(self.parser)
 
         self.subcommands = self.parser.add_subparsers(title='commands')
+        self.subcommands.dest = 'commands'
         self.define_subcommands(self.subcommands)
         self.subcommand_run = self.subcommands.add_parser('run')
         self.subcommand_run.set_defaults(func=self.run)
