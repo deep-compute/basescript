@@ -225,8 +225,13 @@ class BoundLevelLogger(structlog.BoundLoggerBase):
         it also preserves positional arguments in the `event_dict` so
         that the stdblib's support for format strings can be used.
         """
+
+        if isinstance(event, bytes):
+            event = event.decode('utf-8')
+
         if event_args:
             event_kw['positional_args'] = event_args
+
         return super(BoundLevelLogger, self)._proxy_to_logger(method_name,
                                                          event=event,
                                                          **event_kw)
