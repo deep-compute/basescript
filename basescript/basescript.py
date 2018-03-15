@@ -1,25 +1,16 @@
 from __future__ import absolute_import
 
 import sys
-import uuid
-import atexit
-import logging
 import argparse
 import socket
-import structlog
-from datetime import timedelta, datetime
-from functools import wraps
-from threading import Thread
 
-from .log import LevelLoggerFactory, BoundLevelLogger, StdlibStructlogHandler, StderrConsoleRenderer, Stream
+from .log import init_logger
 from .utils import Dummy # FIXME: delete this code and use deeputil.Dummy
 
 class BaseScript(object):
     DESC = 'Base script abstraction'
     LOG_LEVEL = 'INFO'
-
-    # stdlib to structlog handlers should be configured only once.
-    _GLOBAL_LOG_CONFIGURED = False
+    METRIC_GROUPING_INTERVAL = 1
 
     def __init__(self, args=None):
         # argparse parser obj
@@ -37,7 +28,17 @@ class BaseScript(object):
         self.args = self.parser.parse_args(args=args)
 
         self.hostname = socket.gethostname()
-        self.log = self.init_logger()
+
+        self.log = init_logger(
+            fmt=self.args.log_format,
+            quiet=self.args.quiet,
+            level=self.args.log_level,
+            fpath=self.args.log_file,
+            pre_hooks=self.define_log_pre_format_hooks(),
+            post_hooks=self.define_log_post_format_hooks(),
+            metric_grouping_interval=self.METRIC_GROUPING_INTERVAL
+        ).bind(name=self.args.name)
+
         self.stats = Dummy()
 
         args = { n: getattr(self.args, n) for n in vars(self.args) }
@@ -69,61 +70,6 @@ class BaseScript(object):
     def name(self):
         return '.'.join([x for x in (sys.argv[0].split('.')[0], self.args.name) if x])
 
-    def _structlog_uniqueid_processor(self, logger_class, log_method, event):
-        ''' Attach a unique id per event '''
-        if 'id' not in event:
-            event['id'] = '%s_%s' % (
-                    datetime.utcnow().strftime('%Y%m%dT%H%M%S'),
-                    uuid.uuid1().hex
-            )
-        return event
-
-    def _structlog_logtype_processor(self, logger_class, log_method, event):
-        if 'type' not in event:
-            event['type'] = 'log'
-        return event
-
-    def define_log_processors(self):
-        """
-        log processors that structlog executes before final rendering
-        """
-        # these processors should accept logger, method_name and event_dict
-        # and return a new dictionary which will be passed as event_dict to the next one.
-
-        processors = []
-
-        processors.extend([
-            structlog.processors.TimeStamper(fmt="iso"),
-            self._structlog_uniqueid_processor,
-            self._structlog_logtype_processor,
-            structlog.stdlib.PositionalArgumentsFormatter(),
-            structlog.processors.StackInfoRenderer(),
-            structlog.processors.format_exc_info,
-        ])
-
-        return processors
-
-    def define_log_renderer(self):
-        """
-        the final log processor that structlog requires to render.
-        """
-        # it must accept a logger, method_name and event_dict (just like processors)
-        # but must return the rendered string, not a dictionary.
-        # TODO tty logic
-        if self.args.log_format == "json":
-            return structlog.processors.JSONRenderer()
-
-        if self.args.log_format == "pretty":
-            return structlog.dev.ConsoleRenderer()
-
-        if self.args.log_file is not None:
-            return structlog.processors.JSONRenderer()
-
-        if sys.stderr.isatty() and not self.args.quiet:
-            return structlog.dev.ConsoleRenderer()
-
-        return structlog.processors.JSONRenderer()
-
     def define_log_pre_format_hooks(self):
         """
         these hooks are called before the log has been rendered, but after
@@ -143,103 +89,6 @@ class BaseScript(object):
         # these hooks accept a 'msg' and do not return anything
         return []
 
-    def _configure_logger(self):
-        """
-        configures a logger when required write to stderr or a file
-        """
-
-        # NOTE not thread safe. Multiple BaseScripts cannot be instantiated concurrently.
-        level = getattr(logging, self.args.log_level.upper())
-
-        if self._GLOBAL_LOG_CONFIGURED:
-            return
-
-        # TODO different processors for different basescripts ?
-        # TODO dynamically inject processors ?
-
-        # since the hooks need to run through structlog, need to wrap them like processors
-        def wrap_hook(fn):
-            @wraps(fn)
-            def processor(logger, method_name, event_dict):
-                fn(event_dict)
-                return event_dict
-
-            return processor
-
-        processors = self.define_log_processors()
-        processors.extend(
-            [ wrap_hook(h) for h in self.define_log_pre_format_hooks() ]
-        )
-
-        log_renderer = self.define_log_renderer()
-        stderr_required = (not self.args.quiet)
-        pretty_to_stderr = (
-            stderr_required
-            and (
-                self.args.log_format == "pretty"
-                or (self.args.log_format is None and sys.stderr.isatty())
-            )
-        )
-
-        should_inject_pretty_renderer = (
-            pretty_to_stderr
-            and not isinstance(log_renderer, structlog.dev.ConsoleRenderer)
-        )
-        if should_inject_pretty_renderer:
-            stderr_required = False
-            processors.append(StderrConsoleRenderer())
-
-        processors.append(log_renderer)
-        processors.extend(
-            [ wrap_hook(h) for h in self.define_log_post_format_hooks() ]
-        )
-
-        streams = []
-        # we need to use a stream if we are writing to both file and stderr, and both are json
-        if stderr_required:
-            streams.append(sys.stderr)
-
-        if self.args.log_file is not None:
-            # TODO handle creating a directory for this log file ?
-            # TODO set mode and encoding appropriately
-            streams.append(open(self.args.log_file, 'a'))
-
-        assert len(streams) != 0, "cannot configure logger for 0 streams"
-
-        stream = streams[0] if len(streams) == 1 else Stream(*streams)
-        atexit.register(stream.close)
-
-        # a global level struct log config unless otherwise specified.
-        structlog.configure(
-            processors=processors,
-            context_class=dict,
-            logger_factory=LevelLoggerFactory(stream, level=level),
-            wrapper_class=BoundLevelLogger,
-            cache_logger_on_first_use=True,
-        )
-
-        # TODO take care of removing other handlers
-        stdlib_root_log = logging.getLogger()
-        stdlib_root_log.addHandler(StdlibStructlogHandler())
-        stdlib_root_log.setLevel(level)
-
-        self._GLOBAL_LOG_CONFIGURED = True
-
-    def init_logger(self):
-        if self.args.quiet and self.args.log_file is None:
-            # no need for a log - return a dummy
-            return Dummy()
-
-        self._configure_logger()
-
-        # TODO bind relevant things to the basescript here ? name / hostname etc ?
-        log = structlog.get_logger()
-        level = getattr(logging, self.args.log_level.upper())
-        log.setLevel(level)
-
-        # TODO functionality to change even the level of global stdlib logger.
-        return log
-
     def define_subcommands(self, subcommands):
         '''
         Define subcommands (as defined at https://docs.python.org/2/library/argparse.html#sub-commands)
@@ -257,7 +106,7 @@ class BaseScript(object):
         @parser is a parser object created using the `argparse` module.
         returns: None
         '''
-        parser.add_argument('--name', default=None,
+        parser.add_argument('--name', default=sys.argv[0],
             help='Name to identify this instance')
         parser.add_argument('--log-level', default=self.LOG_LEVEL,
             help='Logging level as picked from the logging module')
