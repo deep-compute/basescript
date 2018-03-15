@@ -79,15 +79,15 @@ class BaseScript(object):
         return []
 
     def define_log_post_format_hooks(self):
-	"""
-	these hooks are called after the log has been rendered using
-	the log renderer defined in `define_log_renderer`.
-	they must accept a single argument which is the output of the
-	renderer
-	"""
-	# TODO remove this once structlog supports hooks or handlers
-	# these hooks accept a 'msg' and do not return anything
-	return []
+        """
+        these hooks are called after the log has been rendered using
+        the log renderer defined in `define_log_renderer`.
+        they must accept a single argument which is the output of the
+        renderer
+        """
+        # TODO remove this once structlog supports hooks or handlers
+        # these hooks accept a 'msg' and do not return anything
+        return []
 
     def define_subcommands(self, subcommands):
         '''
