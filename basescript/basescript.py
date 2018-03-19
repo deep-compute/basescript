@@ -5,11 +5,10 @@ import argparse
 import socket
 
 from .log import init_logger
-from .utils import Dummy # FIXME: delete this code and use deeputil.Dummy
+from deeputil import Dummy
 
 class BaseScript(object):
     DESC = 'Base script abstraction'
-    LOG_LEVEL = 'INFO'
     METRIC_GROUPING_INTERVAL = 1
 
     def __init__(self, args=None):
@@ -29,6 +28,19 @@ class BaseScript(object):
 
         self.hostname = socket.gethostname()
 
+        if self.args.metric_grouping_interval:
+            self.METRIC_GROUPING_INTERVAL = self.args.metric_grouping_interval
+
+        if self.args.debug:
+            if self.args.log_level is None:
+                self.args.log_level = 'debug'
+            if self.args.metric_grouping_interval is None:
+                self.args.metric_grouping_interval = 0
+
+        else:
+            self.args.log_level = 'info'
+            self.args.metric_grouping_interval = self.METRIC_GROUPING_INTERVAL
+
         self.log = init_logger(
             fmt=self.args.log_format,
             quiet=self.args.quiet,
@@ -36,7 +48,7 @@ class BaseScript(object):
             fpath=self.args.log_file,
             pre_hooks=self.define_log_pre_format_hooks(),
             post_hooks=self.define_log_post_format_hooks(),
-            metric_grouping_interval=self.METRIC_GROUPING_INTERVAL
+            metric_grouping_interval=self.args.metric_grouping_interval
         ).bind(name=self.args.name)
 
         self.stats = Dummy()
@@ -108,7 +120,7 @@ class BaseScript(object):
         '''
         parser.add_argument('--name', default=sys.argv[0],
             help='Name to identify this instance')
-        parser.add_argument('--log-level', default=self.LOG_LEVEL,
+        parser.add_argument('--log-level', default=None,
             help='Logging level as picked from the logging module')
         parser.add_argument('--log-format', default=None,
             # TODO add more formats
@@ -122,6 +134,12 @@ class BaseScript(object):
         )
         parser.add_argument('--quiet', default=False, action="store_true",
             help='if true, does not print logs to stderr, default: %(default)s',
+        )
+        parser.add_argument('--metric-grouping-interval', default=None, type=int,
+            help='To group metrics based on time interval ex:10 i.e;(10 sec)',
+        )
+        parser.add_argument('--debug', default=False, action="store_true",
+            help='To run the code in debug mode',
         )
 
     def define_args(self, parser):

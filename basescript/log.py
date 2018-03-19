@@ -9,6 +9,7 @@ from threading import Thread, Lock
 from datetime import datetime
 from functools import wraps
 
+from deeputil import Dummy
 import structlog
 
 # stdlib to structlog handlers should be configured only once.
@@ -18,6 +19,12 @@ HOSTNAME = socket.gethostname()
 METRIC_GROUPING_INTERVAL = 1 # one second
 METRICS_STATE = {}
 METRICS_STATE_LOCK = Lock()
+
+LOG = None
+
+class DummyLogger(Dummy):
+    def bind(self, *args, **kwargs):
+        return self
 
 class Stream(object):
     def __init__(self, *streams):
@@ -259,13 +266,13 @@ def _structlog_default_keys_processor(logger_class, log_method, event):
     ''' Add unique id, type and hostname '''
 
     if 'id' not in event:
-	event['id'] = '%s_%s' % (
-		datetime.utcnow().strftime('%Y%m%dT%H%M%S'),
-		uuid.uuid1().hex
-	)
+        event['id'] = '%s_%s' % (
+            datetime.utcnow().strftime('%Y%m%dT%H%M%S'),
+            uuid.uuid1().hex
+        )
 
     if 'type' not in event:
-	event['type'] = 'log'
+        event['type'] = 'log'
 
     event['host'] = HOSTNAME
 
@@ -305,6 +312,9 @@ def metrics_grouping_processor(logger_class, log_method, event):
         if k not in event: continue
         event.pop(k)
 
+    # Delete a key startswith `_` for grouping.
+    event = {k:v for k, v in event.items() if not k.startswith('_')}
+
     key = []
     fields = []
 
@@ -337,11 +347,11 @@ def define_log_processors():
     # these processors should accept logger, method_name and event_dict
     # and return a new dictionary which will be passed as event_dict to the next one.
     return [
-	structlog.processors.TimeStamper(fmt="iso"),
-	_structlog_default_keys_processor,
-	structlog.stdlib.PositionalArgumentsFormatter(),
-	structlog.processors.StackInfoRenderer(),
-	structlog.processors.format_exc_info,
+        structlog.processors.TimeStamper(fmt="iso"),
+        _structlog_default_keys_processor,
+        structlog.stdlib.PositionalArgumentsFormatter(),
+        structlog.processors.StackInfoRenderer(),
+        structlog.processors.format_exc_info,
     ]
 
 def _configure_logger(fmt, quiet, level, fpath,
@@ -437,9 +447,14 @@ def init_logger(
     metric_grouping_interval=METRIC_GROUPING_INTERVAL
     ):
 
+    global LOG
+    if LOG is not None:
+        return LOG
+
     if quiet and fpath is None:
         # no need for a log - return a dummy
-        return Dummy()
+        LOG = DummyLogger()
+        return LOG
 
     _configure_logger(fmt, quiet, level, fpath,
         pre_hooks, post_hooks, metric_grouping_interval)
@@ -454,4 +469,9 @@ def init_logger(
         keep_running.start()
 
     # TODO functionality to change even the level of global stdlib logger.
+
+    LOG = log
     return log
+
+def get_logger():
+    return LOG
