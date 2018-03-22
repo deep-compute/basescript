@@ -22,10 +22,6 @@ METRICS_STATE_LOCK = Lock()
 
 LOG = None
 
-class DummyLogger(Dummy):
-    def bind(self, *args, **kwargs):
-        return self
-
 class Stream(object):
     def __init__(self, *streams):
         self.streams = streams
@@ -453,8 +449,7 @@ def init_logger(
 
     if quiet and fpath is None:
         # no need for a log - return a dummy
-        LOG = DummyLogger()
-        return LOG
+        return Dummy()
 
     _configure_logger(fmt, quiet, level, fpath,
         pre_hooks, post_hooks, metric_grouping_interval)
