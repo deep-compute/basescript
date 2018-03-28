@@ -227,9 +227,7 @@ class BoundLevelLogger(structlog.BoundLoggerBase):
                                                          event=event,
                                                          **event_kw)
 
-    #
     # Pass-through methods to mimick the stdlib's logger interface.
-    #
 
     def setLevel(self, level):
         """
@@ -260,6 +258,7 @@ def define_log_renderer(fmt, fpath, quiet):
 
 def _structlog_default_keys_processor(logger_class, log_method, event):
     ''' Add unique id, type and hostname '''
+    global HOSTNAME
 
     if 'id' not in event:
         event['id'] = '%s_%s' % (

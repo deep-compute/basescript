@@ -90,8 +90,10 @@ Run the script as follows and observe the usage information shown. Note how the
 description appears along with the `c` argument.
 ```bash
 python adder.py --help
-usage: adder.py [-h] [--name NAME] [--log LOG] [--log-level LOG_LEVEL]
-                [--quiet]
+usage: adder.py [-h] [--name NAME] [--log-level LOG_LEVEL]
+                [--log-format {json,pretty}] [--log-file LOG_FILE] [--quiet]
+                [--metric-grouping-interval METRIC_GROUPING_INTERVAL]
+                [--debug]
                 {run} ...
 
 Adds numbers
@@ -99,10 +101,18 @@ Adds numbers
 optional arguments:
   -h, --help            show this help message and exit
   --name NAME           Name to identify this instance
-  --log LOG             Name of log file
   --log-level LOG_LEVEL
                         Logging level as picked from the logging module
-  --quiet
+  --log-format {json,pretty}
+                        Force the format of the logs. By default, if the
+                        command is from a terminal, print colorful logs.
+                        Otherwise print json.
+  --log-file LOG_FILE   Writes logs to log file if specified, default: None
+  --quiet               if true, does not print logs to stderr, default: False
+  --metric-grouping-interval METRIC_GROUPING_INTERVAL
+                        To group metrics based on time interval ex:10 i.e;(10
+                        sec)
+  --debug               To run the code in debug mode
 
 commands:
   {run}
@@ -137,3 +147,30 @@ https://docs.python.org/2/library/logging.html#logging-levels.
 
 `log` is a log object created using python's standard `logging` module. You can
 read more about it at https://docs.python.org/2/library/logging.html.
+
+### Metric-Grouping
+When writing a `Metric` using `self.log`, you can specify `type=metric`. If this is done, a background thread will automatically group multiple metrics into one by averaging values (to prevent writing too many log lines).
+test.py
+```
+from basescript import BaseScript
+import time
+import random
+
+class Stats(BaseScript):
+    def __init__(self):
+        super(Stats, self).__init__()
+
+    def run(self):
+        ts = time.time()
+        while True:
+            # Metric Format.
+            self.log.info("stats", time_duration=(time.time()-ts), type="metric", random_number=random.randint(1, 50))
+
+if __name__ == '__main__':
+    Stats().start()
+```
+
+Run the command to see the output.
+```
+python test.py --metric-grouping-interval 5 run
+```
