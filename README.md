@@ -149,7 +149,7 @@ https://docs.python.org/2/library/logging.html#logging-levels.
 read more about it at https://docs.python.org/2/library/logging.html.
 
 ### Metric-Grouping
-We can collect the Metrics based on time interval.
+When writing a `Metric` using `self.log`, you can specify `type=metric`. If this is done, a background thread will automatically group multiple metrics into one by averaging values (to prevent writing too many log lines).
 test.py
 ```
 from basescript import BaseScript
@@ -163,7 +163,7 @@ class Stats(BaseScript):
     def run(self):
         ts = time.time()
         while True:
-            # New Metric Format.
+            # Metric Format.
             self.log.info("stats", time_duration=(time.time()-ts), type="metric", random_number=random.randint(1, 50))
 
 if __name__ == '__main__':
