@@ -439,8 +439,11 @@ def init_logger(
     fpath=None,
     pre_hooks=None,
     post_hooks=None,
-    metric_grouping_interval=METRIC_GROUPING_INTERVAL
+    metric_grouping_interval=None
     ):
+
+    if metric_grouping_interval is None and not level == 'debug':
+        metric_grouping_interval = METRIC_GROUPING_INTERVAL
 
     global LOG
     if LOG is not None:

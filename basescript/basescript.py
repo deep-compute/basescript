@@ -37,7 +37,7 @@ class BaseScript(object):
             if self.args.metric_grouping_interval is None:
                 self.args.metric_grouping_interval = 0
 
-        else:
+        if not self.args.log_level:
             self.args.log_level = 'info'
             self.args.metric_grouping_interval = self.METRIC_GROUPING_INTERVAL
 
