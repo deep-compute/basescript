@@ -16,7 +16,6 @@ import structlog
 _GLOBAL_LOG_CONFIGURED = False
 
 HOSTNAME = socket.gethostname()
-METRIC_GROUPING_INTERVAL = 1 # one second
 METRICS_STATE = {}
 METRICS_STATE_LOCK = Lock()
 
@@ -441,9 +440,6 @@ def init_logger(
     post_hooks=None,
     metric_grouping_interval=None
     ):
-
-    if metric_grouping_interval is None and not level == 'debug':
-        metric_grouping_interval = METRIC_GROUPING_INTERVAL
 
     global LOG
     if LOG is not None:

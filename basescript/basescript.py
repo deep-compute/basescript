@@ -41,6 +41,9 @@ class BaseScript(object):
             self.args.log_level = 'info'
             self.args.metric_grouping_interval = self.METRIC_GROUPING_INTERVAL
 
+        if self.args.metric_grouping_interval is None:
+            self.args.metric_grouping_interval = self.METRIC_GROUPING_INTERVAL
+
         self.log = init_logger(
             fmt=self.args.log_format,
             quiet=self.args.quiet,
