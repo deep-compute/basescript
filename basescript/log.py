@@ -241,11 +241,9 @@ def define_log_renderer(fmt, fpath, quiet):
     # it must accept a logger, method_name and event_dict (just like processors)
     # but must return the rendered string, not a dictionary.
     # TODO tty logic
-    if fmt == "json":
-        return structlog.processors.JSONRenderer()
 
-    if fmt == "pretty":
-        return structlog.dev.ConsoleRenderer()
+    if fmt:
+        return structlog.processors.JSONRenderer()
 
     if fpath is not None:
         return structlog.processors.JSONRenderer()
