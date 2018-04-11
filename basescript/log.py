@@ -323,8 +323,9 @@ def metrics_grouping_processor(logger_class, log_method, event):
         for fk, fv in fields:
             favg = sfields.get(fk, 0.0)
             favg = (favg * num + fv) / (num + 1) #moving average
-            state['num'] += 1
             sfields[fk] = favg
+
+        state['num'] += 1
 
         METRICS_STATE[key] = state
     finally:
