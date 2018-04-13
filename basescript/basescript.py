@@ -18,6 +18,7 @@ class BaseScript(object):
 
         self.subcommands = self.parser.add_subparsers(title='commands')
         self.subcommands.dest = 'commands'
+        self.subcommands.required = True
         self.define_subcommands(self.subcommands)
         self.subcommand_run = self.subcommands.add_parser('run')
         self.subcommand_run.set_defaults(func=self.run)
@@ -37,8 +38,11 @@ class BaseScript(object):
             if self.args.metric_grouping_interval is None:
                 self.args.metric_grouping_interval = 0
 
-        else:
+        if not self.args.log_level:
             self.args.log_level = 'info'
+            self.args.metric_grouping_interval = self.METRIC_GROUPING_INTERVAL
+
+        if self.args.metric_grouping_interval is None:
             self.args.metric_grouping_interval = self.METRIC_GROUPING_INTERVAL
 
         self.log = init_logger(

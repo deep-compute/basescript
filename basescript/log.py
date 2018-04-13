@@ -16,7 +16,6 @@ import structlog
 _GLOBAL_LOG_CONFIGURED = False
 
 HOSTNAME = socket.gethostname()
-METRIC_GROUPING_INTERVAL = 1 # one second
 METRICS_STATE = {}
 METRICS_STATE_LOCK = Lock()
 
@@ -242,11 +241,9 @@ def define_log_renderer(fmt, fpath, quiet):
     # it must accept a logger, method_name and event_dict (just like processors)
     # but must return the rendered string, not a dictionary.
     # TODO tty logic
-    if fmt == "json":
-        return structlog.processors.JSONRenderer()
 
-    if fmt == "pretty":
-        return structlog.dev.ConsoleRenderer()
+    if fmt:
+        return structlog.processors.JSONRenderer()
 
     if fpath is not None:
         return structlog.processors.JSONRenderer()
@@ -326,8 +323,9 @@ def metrics_grouping_processor(logger_class, log_method, event):
         for fk, fv in fields:
             favg = sfields.get(fk, 0.0)
             favg = (favg * num + fv) / (num + 1) #moving average
-            state['num'] += 1
             sfields[fk] = favg
+
+        state['num'] += 1
 
         METRICS_STATE[key] = state
     finally:
@@ -439,7 +437,7 @@ def init_logger(
     fpath=None,
     pre_hooks=None,
     post_hooks=None,
-    metric_grouping_interval=METRIC_GROUPING_INTERVAL
+    metric_grouping_interval=None
     ):
 
     global LOG
