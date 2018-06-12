@@ -293,6 +293,10 @@ def dump_metrics(log, interval):
             fn(event, type='metric', __grouped__=True, num=n, **d)
 
 def metrics_grouping_processor(logger_class, log_method, event):
+    if event.get('type') == 'logged_metric':
+        event['type'] = 'metric'
+        return event
+
     if event.get('type') != 'metric':
         return event
 
@@ -435,8 +439,8 @@ def init_logger(
     quiet=False,
     level='INFO',
     fpath=None,
-    pre_hooks=None,
-    post_hooks=None,
+    pre_hooks=[],
+    post_hooks=[],
     metric_grouping_interval=None
     ):
 
