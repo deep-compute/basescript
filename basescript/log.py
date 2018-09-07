@@ -435,7 +435,7 @@ def _configure_logger(fmt, quiet, level, fpath,
     _GLOBAL_LOG_CONFIGURED = True
 
 def init_logger(
-    fmt='pretty',
+    fmt=None,
     quiet=False,
     level='INFO',
     fpath=None,
