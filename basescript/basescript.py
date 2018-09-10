@@ -45,7 +45,7 @@ class BaseScript(object):
         if self.args.metric_grouping_interval is None:
             self.args.metric_grouping_interval = self.METRIC_GROUPING_INTERVAL
 
-        self.log = init_logger(
+        log = init_logger(
             fmt=self.args.log_format,
             quiet=self.args.quiet,
             level=self.args.log_level,
@@ -53,7 +53,10 @@ class BaseScript(object):
             pre_hooks=self.define_log_pre_format_hooks(),
             post_hooks=self.define_log_post_format_hooks(),
             metric_grouping_interval=self.args.metric_grouping_interval
-        ).bind(name=self.args.name)
+        )
+
+        self._flush_metrics_q = log._force_flush_q
+        self.log = log.bind(name=self.args.name)
 
         self.stats = Dummy()
 
@@ -73,12 +76,13 @@ class BaseScript(object):
                 raise
         except KeyboardInterrupt:
             self.log.warning("exited via keyboard interrupt")
-            sys.exit(1)
         except:
             self.log.exception("exited start function")
             # set exit code so we know it did not end successfully
             # TODO different exit codes based on signals ?
-            sys.exit(1)
+        finally:
+            self._flush_metrics_q.put(None, block=True)
+            self._flush_metrics_q.put(None, block=True, timeout=1)
 
         self.log.info("exited successfully")
 
