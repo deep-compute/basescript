@@ -5,16 +5,18 @@ import atexit
 import socket
 import logging
 import numbers
+import queue
 from threading import Thread, Lock
 from datetime import datetime
 from functools import wraps
 
-from deeputil import Dummy
+from deeputil import Dummy, keeprunning
 import structlog
 
 # stdlib to structlog handlers should be configured only once.
 _GLOBAL_LOG_CONFIGURED = False
 
+FORCE_FLUSH_Q_SIZE = 1
 HOSTNAME = socket.gethostname()
 METRICS_STATE = {}
 METRICS_STATE_LOCK = Lock()
@@ -270,11 +272,18 @@ def _structlog_default_keys_processor(logger_class, log_method, event):
 
     return event
 
+@keeprunning()
 def dump_metrics(log, interval):
     global METRICS_STATE
 
+    terminate = False
+
     while True:
-        time.sleep(interval)
+        try:
+            log._force_flush_q.get(block=True, timeout=interval)
+            terminate = True
+        except queue.Empty:
+            pass
 
         METRICS_STATE_LOCK.acquire()
         m = METRICS_STATE
@@ -291,6 +300,9 @@ def dump_metrics(log, interval):
 
             fn = getattr(log, level)
             fn(event, type='metric', __grouped__=True, num=n, **d)
+
+        if terminate:
+            break
 
 def metrics_grouping_processor(logger_class, log_method, event):
     if event.get('type') == 'logged_metric':
@@ -458,6 +470,8 @@ def init_logger(
     log = structlog.get_logger()
     level = getattr(logging, level.upper())
     log.setLevel(level)
+
+    log._force_flush_q = queue.Queue(maxsize=FORCE_FLUSH_Q_SIZE)
 
     if metric_grouping_interval:
         keep_running = Thread(target=dump_metrics, args=(log, metric_grouping_interval))
