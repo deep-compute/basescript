@@ -5,7 +5,7 @@ import atexit
 import socket
 import logging
 import numbers
-import queue
+from six.moves import queue
 from threading import Thread, Lock
 from datetime import datetime
 from functools import wraps
