@@ -84,7 +84,7 @@ class BaseScript(object):
             self._flush_metrics_q.put(None, block=True)
             self._flush_metrics_q.put(None, block=True, timeout=1)
 
-        self.log.info("exited successfully")
+        self.log.debug("exited_successfully")
 
     @property
     def name(self):

@@ -27,8 +27,8 @@ deploy:
     - basescript/utils.py
     - examples/adder.py
     - examples/helloworld.py
-  name: basescript-0.2.1
-  tag_name: 0.2.1
+  name: basescript-0.2.9
+  tag_name: 0.2.9
   on:
     repo: deep-compute/basescript
 - provider: pypi
