@@ -16,7 +16,7 @@ deploy:
 - provider: releases
   skip_cleanup: true
   api_key:
-    secure: I1fed3u9oQff9pskIpW72Vwbl8EqX/BFpNT+Upqhx2sTEXJnmaj9yXunflT1nHRpWCl+jIsJ8iYYuOegiDWfZrcs7AgXobCKOCXj98GLX3qknkZ4raDC1lwhHHNOkvMzjARQYURFIRvDPk8vyg9rLHqzqKhgPyeByJL34UfQv/eBuYDXbvty88FefHmHRmIPJxDGQskdhic09uEkVLI7Nx1ay5a9BnyvcZ1IglqQRTj3yW7XOhlxYxWiTcO3ksOs4DKqciJ6sARyh09Qj0Zo5MD3+qKGLvBKAlHK1RHYWrbekwELxCGm0AOrI6GqaboEVC1OMHU+xmMYUk39yvCVc17ypHgu4ne81XnRA/ISzx6ymCUay03PRV3PBDPV8PKXktQEnmTg37FE0/NYJDmT1T7odjDooAJw2gLpbJQOY7ut4bXeoYgHzOiHzcJvO1s8DL7O000rQTqRMXIpQm7OiYYJ4I9NPUj2lGWKbi6jeALqfGWOvUxeQkneiNct0+s6PNyOZMfvvqbSODju8D3WKvA0p8QDqNa3uzI+RRswOJNYNP+0RnynAZ+vaX5Xk1AS5XriZaf2v7rHDIl8carGZy8G/tuP3UbfUzmE+V8CHmzNa4aQ3uHAJbrJBf/ZzIqF0KCq8g2PvM4xwJwOimsAPVi1f/oiMLxQTN7RVME8R+o=
+    secure: siQVd277FRApq4RSiq3149zA+2OcPVu7wmh0Qv/U5AUBTJRv4sKP9VV8lKLjgKmmFUsq2lxxe+ENPk66jD0OSp4ZBHTdVAI2k3W9xeuUO/b8ol+peXt78uOnuNIdNyrJPuQYcPVhzKaeUh5lBmLGQrOCJi10foPJK6r2zkvMAB6jvvYhczE/KWCpBKLmC1YI2fwlqUWPeO6agLDnZ3XhHxJaKkTwcBAmQ50qWaUaMf/E8TMfz7L+cGedVBaR1ml6+Te1NN5uw09y/RaEb9UVYREz4zgYz5dhevmXiX8OG9pSxwJApIsejF47LYI2xoIjhaeysf1RpsYurbz3BFUHT9cVaP3BkBNiDRenPrhhyAPe+U/Xv5N9CWn9t7rKB/0gncBx+GyVgAKu5EkyHuGWhOA5knMWaUAB057w5hKBBKReYclrtNlPUWYjAE/s3vTaUSuUej1bCRr9y1noIiMxwGeYTwGfc3TFoMJVFVM6SBN7E22l5PHISqcjBch2/dtCsaHHdxi5PIxb61UPSREQ6c6hzIfu2gWrKpLuDFs8z78xxGUrG4peIRr3jZ6MUhi0Fw1LFFkKSvtXe3HQ2sdzMy7G91gj5hajtPXJ+ZWV6xvS5FU/Vh2bZroJvhnOJM9OV+qjI596OZ19E6XfA3BwHwS+cFG7jLD2+e8fFSe/Hz0=
   file:
     - LICENSE
     - README.md
@@ -33,7 +33,7 @@ deploy:
     repo: deep-compute/basescript
 - provider: pypi
   distributions: "sdist bdist_wheel"
-  server: https://testpypi.python.org/pypi
+  server: https://test.pypi.org/legacy/
   skip_cleanup: true
   user: "deepcompute"
   password:
