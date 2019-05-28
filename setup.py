@@ -22,7 +22,7 @@ def get_long_description():
 
 long_description = get_long_description()
 
-version = '0.2.9'
+version = '0.3.0'
 setup(
     name="basescript",
     version=version,
@@ -36,7 +36,7 @@ setup(
     license='MIT License',
     install_requires=[
         "pytz==2018.3",
-        "six==1.11.0",
+        "six>=1.11.0",
         "structlog==18.1.0",
         "colorama==0.3.9",
         "deeputil==0.2.7",
