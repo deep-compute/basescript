@@ -82,6 +82,11 @@ class StdlibStructlogHandler(logging.Handler):
         event = record.msg
         args = record.args or []
 
+        # If the received event is a class instance
+        # we are checking for message and taking message as event
+        if not isinstance(event, str) and getattr(event, "message", None):
+            event = event.message
+
         fn(event, *args, **kw)
 
 # Logger with an interface similar to python's standard library logger
