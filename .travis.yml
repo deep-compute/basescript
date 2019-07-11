@@ -5,7 +5,7 @@ before_deploy:
 - rm $TRAVIS_BUILD_DIR/pandoc.deb
 - pandoc --from=markdown --to=rst --output=$TRAVIS_BUILD_DIR/README.rst README.md
 before_install:
-- pip3 install black
+- pip install black
 deploy:
 - provider: releases
   skip_cleanup: true
