@@ -23,12 +23,13 @@ METRICS_STATE_LOCK = Lock()
 
 LOG = None
 
+
 class Stream(object):
     def __init__(self, *streams):
         self.streams = streams
 
     def write(self, data):
-        print (data)
+        print(data)
         for s in self.streams:
             s.write(data)
 
@@ -39,6 +40,7 @@ class Stream(object):
     def close(self):
         for s in self.streams:
             s.close()
+
 
 class StderrConsoleRenderer(object):
     BACKUP_KEYS = ("timestamp", "level", "event", "logger", "stack", "exception")
@@ -58,12 +60,12 @@ class StderrConsoleRenderer(object):
                 continue
             backup[k] = v
 
-
         msg = self.cr(logger, method_name, event_dict)
         self.pl.msg(msg)
 
         event_dict.update(backup)
         return event_dict
+
 
 class StdlibStructlogHandler(logging.Handler):
     def __init__(self):
@@ -75,8 +77,8 @@ class StdlibStructlogHandler(logging.Handler):
         levelname = record.levelname.lower()
 
         if record.exc_info is not None:
-            kw['exc_info'] = record.exc_info
-            levelname = 'exception'
+            kw["exc_info"] = record.exc_info
+            levelname = "exception"
 
         fn = getattr(self._log, levelname)
         event = record.msg
@@ -88,6 +90,7 @@ class StdlibStructlogHandler(logging.Handler):
             event = event.message
 
         fn(event, *args, **kw)
+
 
 # Logger with an interface similar to python's standard library logger
 # to be used with structlog.PrintLoggerFactory
@@ -109,6 +112,7 @@ class LevelLogger(structlog.PrintLogger):
     def isEnabledFor(self, level):
         return level >= self.level
 
+
 class LevelLoggerFactory(object):
     def __init__(self, fp, level=None):
         self.fp = fp
@@ -116,6 +120,7 @@ class LevelLoggerFactory(object):
 
     def __call__(self, *args):
         return LevelLogger(self.fp, level=self.level)
+
 
 class BoundLevelLogger(structlog.BoundLoggerBase):
     """
@@ -141,8 +146,8 @@ class BoundLevelLogger(structlog.BoundLoggerBase):
             return
 
         kw = self._add_base_info(kw)
-        kw['level'] = "debug"
-        return self._proxy_to_logger('debug', event, *args, **kw)
+        kw["level"] = "debug"
+        return self._proxy_to_logger("debug", event, *args, **kw)
 
     def info(self, event=None, *args, **kw):
         """
@@ -152,8 +157,8 @@ class BoundLevelLogger(structlog.BoundLoggerBase):
             return
 
         kw = self._add_base_info(kw)
-        kw['level'] = "info"
-        return self._proxy_to_logger('info', event, *args, **kw)
+        kw["level"] = "info"
+        return self._proxy_to_logger("info", event, *args, **kw)
 
     def warning(self, event=None, *args, **kw):
         """
@@ -163,8 +168,8 @@ class BoundLevelLogger(structlog.BoundLoggerBase):
             return
 
         kw = self._add_base_info(kw)
-        kw['level'] = "warning"
-        return self._proxy_to_logger('warning', event, *args, **kw)
+        kw["level"] = "warning"
+        return self._proxy_to_logger("warning", event, *args, **kw)
 
     warn = warning
 
@@ -176,8 +181,8 @@ class BoundLevelLogger(structlog.BoundLoggerBase):
             return
 
         kw = self._add_base_info(kw)
-        kw['level'] = "error"
-        return self._proxy_to_logger('error', event, *args, **kw)
+        kw["level"] = "error"
+        return self._proxy_to_logger("error", event, *args, **kw)
 
     def critical(self, event=None, *args, **kw):
         """
@@ -187,8 +192,8 @@ class BoundLevelLogger(structlog.BoundLoggerBase):
             return
 
         kw = self._add_base_info(kw)
-        kw['level'] = "critical"
-        return self._proxy_to_logger('critical', event, *args, **kw)
+        kw["level"] = "critical"
+        return self._proxy_to_logger("critical", event, *args, **kw)
 
     def exception(self, event=None, *args, **kw):
         """
@@ -199,8 +204,8 @@ class BoundLevelLogger(structlog.BoundLoggerBase):
             return
 
         kw = self._add_base_info(kw)
-        kw['level'] = "exception"
-        kw.setdefault('exc_info', True)
+        kw["level"] = "exception"
+        kw.setdefault("exc_info", True)
         return self.error(event, *args, **kw)
 
     def _dump_stats(self, metric):
@@ -209,12 +214,11 @@ class BoundLevelLogger(structlog.BoundLoggerBase):
         """
         # TODO have a feature to silence metrics as well
         # TODO if dumping to console, we shouldn't club metrics. It should be sent one by one on each line.
-        return self._proxy_to_logger('msg', metric, type='metric', level='info')
+        return self._proxy_to_logger("msg", metric, type="metric", level="info")
 
     fatal = critical
 
-    def _proxy_to_logger(self, method_name, event, *event_args,
-                         **event_kw):
+    def _proxy_to_logger(self, method_name, event, *event_args, **event_kw):
         """
         Propagate a method call to the wrapped logger.
 
@@ -224,14 +228,14 @@ class BoundLevelLogger(structlog.BoundLoggerBase):
         """
 
         if isinstance(event, bytes):
-            event = event.decode('utf-8')
+            event = event.decode("utf-8")
 
         if event_args:
-            event_kw['positional_args'] = event_args
+            event_kw["positional_args"] = event_args
 
-        return super(BoundLevelLogger, self)._proxy_to_logger(method_name,
-                                                         event=event,
-                                                         **event_kw)
+        return super(BoundLevelLogger, self)._proxy_to_logger(
+            method_name, event=event, **event_kw
+        )
 
     # Pass-through methods to mimick the stdlib's logger interface.
 
@@ -240,6 +244,7 @@ class BoundLevelLogger(structlog.BoundLoggerBase):
         Calls :meth:`logging.Logger.setLevel` with unmodified arguments.
         """
         self._logger.setLevel(level)
+
 
 def define_log_renderer(fmt, fpath, quiet):
     """
@@ -260,22 +265,24 @@ def define_log_renderer(fmt, fpath, quiet):
 
     return structlog.processors.JSONRenderer()
 
+
 def _structlog_default_keys_processor(logger_class, log_method, event):
-    ''' Add unique id, type and hostname '''
+    """ Add unique id, type and hostname """
     global HOSTNAME
 
-    if 'id' not in event:
-        event['id'] = '%s_%s' % (
-            datetime.utcnow().strftime('%Y%m%dT%H%M%S'),
-            uuid.uuid1().hex
+    if "id" not in event:
+        event["id"] = "%s_%s" % (
+            datetime.utcnow().strftime("%Y%m%dT%H%M%S"),
+            uuid.uuid1().hex,
         )
 
-    if 'type' not in event:
-        event['type'] = 'log'
+    if "type" not in event:
+        event["type"] = "log"
 
-    event['host'] = HOSTNAME
+    event["host"] = HOSTNAME
 
     return event
+
 
 @keeprunning()
 def dump_metrics(log, interval):
@@ -296,37 +303,39 @@ def dump_metrics(log, interval):
         METRICS_STATE_LOCK.release()
 
         for (k, _), v in m.items():
-            n = v['num']
+            n = v["num"]
             d = dict(k)
-            d.update(v['fields'])
+            d.update(v["fields"])
 
-            level = d.pop('level')
-            event = d.pop('event')
+            level = d.pop("level")
+            event = d.pop("event")
 
             fn = getattr(log, level)
-            fn(event, type='metric', __grouped__=True, num=n, **d)
+            fn(event, type="metric", __grouped__=True, num=n, **d)
 
         if terminate:
             break
 
+
 def metrics_grouping_processor(logger_class, log_method, event):
-    if event.get('type') == 'logged_metric':
-        event['type'] = 'metric'
+    if event.get("type") == "logged_metric":
+        event["type"] = "metric"
         return event
 
-    if event.get('type') != 'metric':
+    if event.get("type") != "metric":
         return event
 
-    if event.get('__grouped__'):
-        event.pop('__grouped__')
+    if event.get("__grouped__"):
+        event.pop("__grouped__")
         return event
 
-    for k in ('timestamp', 'type', 'id'):
-        if k not in event: continue
+    for k in ("timestamp", "type", "id"):
+        if k not in event:
+            continue
         event.pop(k)
 
     # Delete a key startswith `_` for grouping.
-    event = {k:v for k, v in event.items() if not k.startswith('_')}
+    event = {k: v for k, v in event.items() if not k.startswith("_")}
 
     key = []
     fields = []
@@ -337,22 +346,23 @@ def metrics_grouping_processor(logger_class, log_method, event):
     key = (tuple(key), tuple(sorted(k for k, _ in fields)))
     METRICS_STATE_LOCK.acquire()
     try:
-        state = METRICS_STATE.get(key, {'num': 0, 'fields': {}})
-        sfields = state['fields']
-        num = state['num']
+        state = METRICS_STATE.get(key, {"num": 0, "fields": {}})
+        sfields = state["fields"]
+        num = state["num"]
 
         for fk, fv in fields:
             favg = sfields.get(fk, 0.0)
-            favg = (favg * num + fv) / (num + 1) #moving average
+            favg = (favg * num + fv) / (num + 1)  # moving average
             sfields[fk] = favg
 
-        state['num'] += 1
+        state["num"] += 1
 
         METRICS_STATE[key] = state
     finally:
         METRICS_STATE_LOCK.release()
 
     raise structlog.DropEvent
+
 
 def define_log_processors():
     """
@@ -368,8 +378,10 @@ def define_log_processors():
         structlog.processors.format_exc_info,
     ]
 
-def _configure_logger(fmt, quiet, level, fpath,
-    pre_hooks, post_hooks, metric_grouping_interval):
+
+def _configure_logger(
+    fmt, quiet, level, fpath, pre_hooks, post_hooks, metric_grouping_interval
+):
     """
     configures a logger when required write to stderr or a file
     """
@@ -391,34 +403,25 @@ def _configure_logger(fmt, quiet, level, fpath,
         return processor
 
     processors = define_log_processors()
-    processors.extend(
-        [ wrap_hook(h) for h in pre_hooks ]
-    )
+    processors.extend([wrap_hook(h) for h in pre_hooks])
     if metric_grouping_interval:
         processors.append(metrics_grouping_processor)
 
     log_renderer = define_log_renderer(fmt, fpath, quiet)
-    stderr_required = (not quiet)
-    pretty_to_stderr = (
-        stderr_required
-        and (
-            fmt == "pretty"
-            or (fmt is None and sys.stderr.isatty())
-        )
+    stderr_required = not quiet
+    pretty_to_stderr = stderr_required and (
+        fmt == "pretty" or (fmt is None and sys.stderr.isatty())
     )
 
-    should_inject_pretty_renderer = (
-        pretty_to_stderr
-        and not isinstance(log_renderer, structlog.dev.ConsoleRenderer)
+    should_inject_pretty_renderer = pretty_to_stderr and not isinstance(
+        log_renderer, structlog.dev.ConsoleRenderer
     )
     if should_inject_pretty_renderer:
         stderr_required = False
         processors.append(StderrConsoleRenderer())
 
     processors.append(log_renderer)
-    processors.extend(
-        [ wrap_hook(h) for h in post_hooks ]
-    )
+    processors.extend([wrap_hook(h) for h in post_hooks])
 
     streams = []
     # we need to use a stream if we are writing to both file and stderr, and both are json
@@ -428,7 +431,7 @@ def _configure_logger(fmt, quiet, level, fpath,
     if fpath is not None:
         # TODO handle creating a directory for this log file ?
         # TODO set mode and encoding appropriately
-        streams.append(open(fpath, 'a'))
+        streams.append(open(fpath, "a"))
 
     assert len(streams) != 0, "cannot configure logger for 0 streams"
 
@@ -451,15 +454,16 @@ def _configure_logger(fmt, quiet, level, fpath,
 
     _GLOBAL_LOG_CONFIGURED = True
 
+
 def init_logger(
     fmt=None,
     quiet=False,
-    level='INFO',
+    level="INFO",
     fpath=None,
     pre_hooks=[],
     post_hooks=[],
-    metric_grouping_interval=None
-    ):
+    metric_grouping_interval=None,
+):
 
     global LOG
     if LOG is not None:
@@ -469,8 +473,9 @@ def init_logger(
         # no need for a log - return a dummy
         return Dummy()
 
-    _configure_logger(fmt, quiet, level, fpath,
-        pre_hooks, post_hooks, metric_grouping_interval)
+    _configure_logger(
+        fmt, quiet, level, fpath, pre_hooks, post_hooks, metric_grouping_interval
+    )
 
     log = structlog.get_logger()
     level = getattr(logging, level.upper())
@@ -487,6 +492,7 @@ def init_logger(
 
     LOG = log
     return log
+
 
 def get_logger():
     return LOG
