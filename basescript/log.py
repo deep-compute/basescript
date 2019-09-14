@@ -29,7 +29,6 @@ class Stream(object):
         self.streams = streams
 
     def write(self, data):
-        print(data)
         for s in self.streams:
             s.write(data)
 
@@ -246,26 +245,6 @@ class BoundLevelLogger(structlog.BoundLoggerBase):
         self._logger.setLevel(level)
 
 
-def define_log_renderer(fmt, fpath, quiet):
-    """
-    the final log processor that structlog requires to render.
-    """
-    # it must accept a logger, method_name and event_dict (just like processors)
-    # but must return the rendered string, not a dictionary.
-    # TODO tty logic
-
-    if fmt:
-        return structlog.processors.JSONRenderer()
-
-    if fpath is not None:
-        return structlog.processors.JSONRenderer()
-
-    if sys.stderr.isatty() and not quiet:
-        return structlog.dev.ConsoleRenderer()
-
-    return structlog.processors.JSONRenderer()
-
-
 def _structlog_default_keys_processor(logger_class, log_method, event):
     """ Add unique id, type and hostname """
     global HOSTNAME
@@ -379,68 +358,45 @@ def define_log_processors():
     ]
 
 
-def _configure_logger(
-    fmt, quiet, level, fpath, pre_hooks, post_hooks, metric_grouping_interval
-):
+def _configure_logger(fmt, quiet, level, fpath, processors, metric_grouping_interval):
     """
     configures a logger when required write to stderr or a file
     """
 
     # NOTE not thread safe. Multiple BaseScripts cannot be instantiated concurrently.
-    level = getattr(logging, level.upper())
 
     global _GLOBAL_LOG_CONFIGURED
     if _GLOBAL_LOG_CONFIGURED:
         return
 
-    # since the hooks need to run through structlog, need to wrap them like processors
-    def wrap_hook(fn):
-        @wraps(fn)
-        def processor(logger, method_name, event_dict):
-            fn(event_dict)
-            return event_dict
+    assert fmt in ["json", "pretty"]
 
-        return processor
-
-    processors = define_log_processors()
-    processors.extend([wrap_hook(h) for h in pre_hooks])
+    _processors = define_log_processors()
+    _processors += processors or []
     if metric_grouping_interval:
-        processors.append(metrics_grouping_processor)
-
-    log_renderer = define_log_renderer(fmt, fpath, quiet)
-    stderr_required = not quiet
-    pretty_to_stderr = stderr_required and (
-        fmt == "pretty" or (fmt is None and sys.stderr.isatty())
-    )
-
-    should_inject_pretty_renderer = pretty_to_stderr and not isinstance(
-        log_renderer, structlog.dev.ConsoleRenderer
-    )
-    if should_inject_pretty_renderer:
-        stderr_required = False
-        processors.append(StderrConsoleRenderer())
-
-    processors.append(log_renderer)
-    processors.extend([wrap_hook(h) for h in post_hooks])
+        _processors.append(metrics_grouping_processor)
 
     streams = []
-    # we need to use a stream if we are writing to both file and stderr, and both are json
-    if stderr_required:
-        streams.append(sys.stderr)
 
-    if fpath is not None:
-        # TODO handle creating a directory for this log file ?
-        # TODO set mode and encoding appropriately
+    if fpath:
         streams.append(open(fpath, "a"))
 
-    assert len(streams) != 0, "cannot configure logger for 0 streams"
+    if fmt == "json" and not quiet:
+        streams.append(sys.stderr)
+
+    if fmt == "pretty" and not quiet:
+        _processors.append(StderrConsoleRenderer())
+
+    _processors.append(structlog.processors.JSONRenderer())
+
+    # a global level struct log config unless otherwise specified.
+    level = getattr(logging, level.upper())
 
     stream = streams[0] if len(streams) == 1 else Stream(*streams)
     atexit.register(stream.close)
 
-    # a global level struct log config unless otherwise specified.
     structlog.configure(
-        processors=processors,
+        processors=_processors,
         context_class=dict,
         logger_factory=LevelLoggerFactory(stream, level=level),
         wrapper_class=BoundLevelLogger,
@@ -460,10 +416,12 @@ def init_logger(
     quiet=False,
     level="INFO",
     fpath=None,
-    pre_hooks=[],
-    post_hooks=[],
+    processors=None,
     metric_grouping_interval=None,
 ):
+    """
+    fmt=pretty/json controls only stderr; file always gets json.
+    """
 
     global LOG
     if LOG is not None:
@@ -473,14 +431,12 @@ def init_logger(
         # no need for a log - return a dummy
         return Dummy()
 
-    _configure_logger(
-        fmt, quiet, level, fpath, pre_hooks, post_hooks, metric_grouping_interval
-    )
+    if not fmt and not quiet:
+        fmt = "pretty" if sys.stderr.isatty() else "json"
+
+    _configure_logger(fmt, quiet, level, fpath, processors, metric_grouping_interval)
 
     log = structlog.get_logger()
-    level = getattr(logging, level.upper())
-    log.setLevel(level)
-
     log._force_flush_q = queue.Queue(maxsize=FORCE_FLUSH_Q_SIZE)
 
     if metric_grouping_interval:
