@@ -263,6 +263,14 @@ def _structlog_default_keys_processor(logger_class, log_method, event):
     return event
 
 
+def _structlog_minimal_processor(logger_class, log_method, event):
+    for key in ("host", "id", "type"):
+        if key in event:
+            event.pop(key)
+
+    return event
+
+
 @keeprunning()
 def dump_metrics(log, interval):
     global METRICS_STATE
@@ -358,7 +366,9 @@ def define_log_processors():
     ]
 
 
-def _configure_logger(fmt, quiet, level, fpath, processors, metric_grouping_interval):
+def _configure_logger(
+    fmt, quiet, level, fpath, processors, metric_grouping_interval, minimal
+):
     """
     configures a logger when required write to stderr or a file
     """
@@ -375,6 +385,9 @@ def _configure_logger(fmt, quiet, level, fpath, processors, metric_grouping_inte
     _processors += processors or []
     if metric_grouping_interval:
         _processors.append(metrics_grouping_processor)
+
+    if minimal:
+        _processors.append(_structlog_minimal_processor)
 
     streams = []
 
@@ -418,6 +431,7 @@ def init_logger(
     fpath=None,
     processors=None,
     metric_grouping_interval=None,
+    minimal=False,
 ):
     """
     fmt=pretty/json controls only stderr; file always gets json.
@@ -434,7 +448,9 @@ def init_logger(
     if not fmt and not quiet:
         fmt = "pretty" if sys.stderr.isatty() else "json"
 
-    _configure_logger(fmt, quiet, level, fpath, processors, metric_grouping_interval)
+    _configure_logger(
+        fmt, quiet, level, fpath, processors, metric_grouping_interval, minimal
+    )
 
     log = structlog.get_logger()
     log._force_flush_q = queue.Queue(maxsize=FORCE_FLUSH_Q_SIZE)

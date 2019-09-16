@@ -54,6 +54,7 @@ class BaseScript(object):
             pre_hooks=self.define_log_pre_format_hooks(),
             post_hooks=self.define_log_post_format_hooks(),
             metric_grouping_interval=self.args.metric_grouping_interval,
+            minimal=self.args.minimal,
         )
 
         self._flush_metrics_q = log._force_flush_q
@@ -168,6 +169,12 @@ class BaseScript(object):
             default=False,
             action="store_true",
             help="To run the code in debug mode",
+        )
+        parser.add_argument(
+            "--minimal",
+            default=False,
+            action="store_true",
+            help="Hide log keys such as id, host",
         )
 
     def define_args(self, parser):
