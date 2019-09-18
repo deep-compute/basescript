@@ -25,7 +25,7 @@ def get_long_description():
 
 long_description = get_long_description()
 
-version = "0.3.3"
+version = "0.3.4"
 setup(
     name="basescript",
     version=version,

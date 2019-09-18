@@ -51,8 +51,7 @@ class BaseScript(object):
             quiet=self.args.quiet,
             level=self.args.log_level,
             fpath=self.args.log_file,
-            pre_hooks=self.define_log_pre_format_hooks(),
-            post_hooks=self.define_log_post_format_hooks(),
+            processors=self.define_log_processors(),
             metric_grouping_interval=self.args.metric_grouping_interval,
             minimal=self.args.minimal,
         )
@@ -92,23 +91,12 @@ class BaseScript(object):
     def name(self):
         return ".".join([x for x in (sys.argv[0].split(".")[0], self.args.name) if x])
 
-    def define_log_pre_format_hooks(self):
+    def define_log_processors(self):
         """
-        these hooks are called before the log has been rendered, but after
-        all necessary filtering by log_processors has taken place.
-        they must accept a single argument which is a dictionary.
+        These processors are called before a log is rendered but after
+        all necessary filtering by the default log processors has taken
+        place. They must have the function signature required by `structlog`
         """
-        return []
-
-    def define_log_post_format_hooks(self):
-        """
-        these hooks are called after the log has been rendered using
-        the log renderer defined in `define_log_renderer`.
-        they must accept a single argument which is the output of the
-        renderer
-        """
-        # TODO remove this once structlog supports hooks or handlers
-        # these hooks accept a 'msg' and do not return anything
         return []
 
     def define_subcommands(self, subcommands):
