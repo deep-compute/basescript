@@ -148,6 +148,46 @@ https://docs.python.org/2/library/logging.html#logging-levels.
 `log` is a log object created using python's standard `logging` module. You can
 read more about it at https://docs.python.org/2/library/logging.html.
 
+#### Sub commands
+When we have multiple functionalities then there is a way to call or execute each functionality with different sub command.
+
+For example if we have add and subtract in the same script then we can call each functionality with different sub command.
+
+calc.py
+```python
+from basescript import BaseScript
+
+class Calc(BaseScript):
+    A = 10
+
+    def add(self):
+        print(self.A + self.args.b)
+
+    def sub(self):
+        print(self.A - self.args.b)
+
+    def define_subcommands(self, subcommands):
+        super(Calc, self).define_subcommands(subcommands)
+
+        add_cmd = subcommands.add_parser("add", help="Adds number")
+        add_cmd.set_defaults(func=self.add)
+        add_cmd.add_argument('--b', type=int, help="Number to add")
+
+        sub_cmd = subcommands.add_parser("sub", help="Subtracts number")
+        sub_cmd.set_defaults(func=self.sub)
+        sub_cmd.add_argument('--b', type=int, help="Number to subtract")
+
+if __name__ == '__main__':
+    Calc().start()
+```
+Run
+```bash
+$ python3 calc.py add --b 4
+14
+$ python3 calc.py sub --b 4
+6
+```
+
 ### Metric-Grouping
 When writing a `Metric` using `self.log`, you can specify `type=metric`. If this is done, a background thread will automatically group multiple metrics into one by averaging values (to prevent writing too many log lines).
 test.py
