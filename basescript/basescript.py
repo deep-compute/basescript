@@ -72,7 +72,9 @@ class BaseScript(object):
         # invoke the appropriate sub-command as requested from command-line
         try:
             self.args.func()
-            self.log.debug("exited_successfully")
+        except SystemExit as e:
+            if e.code != 0:
+                raise
         except KeyboardInterrupt:
             self.log.warning("exited via keyboard interrupt")
         except Exception as e:
@@ -81,6 +83,8 @@ class BaseScript(object):
         finally:
             self._flush_metrics_q.put(None, block=True)
             self._flush_metrics_q.put(None, block=True, timeout=1)
+
+        self.log.debug("exited_successfully")
 
     @property
     def name(self):
