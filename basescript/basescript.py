@@ -79,7 +79,7 @@ class BaseScript(object):
             self.log.warning("exited via keyboard interrupt")
         except Exception as e:
             self.log.error("exited start function")
-            raise e
+            raise
         finally:
             self._flush_metrics_q.put(None, block=True)
             self._flush_metrics_q.put(None, block=True, timeout=1)
