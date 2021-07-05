@@ -4,7 +4,7 @@ import sys
 import argparse
 import socket
 
-from .log import init_logger
+from .log import init_logger, pretty_print
 from deeputil import Dummy
 
 
@@ -107,7 +107,18 @@ class BaseScript(object):
         blah_command = subcommands.add_parser('blah')
         blah_command.set_defaults(func=fn_blah)
         """
-        pass
+        pretty_cmd = subcommands.add_parser("pretty")
+        pretty_cmd.add_argument(
+            "-c",
+            "--no-colors",
+            action="store_true",
+            default=False,
+            help="Do not emit colored output",
+        )
+
+        pretty_cmd.set_defaults(
+            func=lambda: pretty_print(colors=not self.args.no_colors)
+        )
 
     def define_baseargs(self, parser):
         """
@@ -182,3 +193,10 @@ class BaseScript(object):
         Override this method to define logic for `run` sub-command
         """
         pass
+
+    def pretty(self):
+        print("hello")
+
+
+def main():
+    BaseScript().start()

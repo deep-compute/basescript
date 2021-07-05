@@ -25,7 +25,7 @@ def get_long_description():
 
 long_description = get_long_description()
 
-version = "0.3.6"
+version = "0.3.7"
 setup(
     name="basescript",
     version=version,
@@ -46,6 +46,7 @@ setup(
     ],
     package_dir={"basescript": "basescript"},
     packages=find_packages(".", exclude=["tests*"]),
+    entry_points={"console_scripts": ["basescript=basescript:main"]},
     include_package_data=True,
     classifiers=[
         "Programming Language :: Python :: 2.7",
