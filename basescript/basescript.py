@@ -194,9 +194,6 @@ class BaseScript(object):
         """
         pass
 
-    def pretty(self):
-        print("hello")
-
 
 def main():
     BaseScript().start()
