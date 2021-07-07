@@ -1,4 +1,5 @@
 import sys
+import json
 import time
 import uuid
 import atexit
@@ -464,6 +465,12 @@ def init_logger(
 
     LOG = log
     return log
+
+
+def pretty_print(colors=True):
+    r = structlog.dev.ConsoleRenderer(colors=colors)
+    for line in sys.stdin:
+        print(r(None, None, json.loads(line)))
 
 
 def get_logger():
