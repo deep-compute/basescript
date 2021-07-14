@@ -6,6 +6,7 @@ import atexit
 import socket
 import logging
 import numbers
+import signal
 from six.moves import queue
 from threading import Thread, Lock
 from datetime import datetime
@@ -40,6 +41,32 @@ class Stream(object):
     def close(self):
         for s in self.streams:
             s.close()
+
+
+class FileWrapper:
+    def __init__(self, fpath):
+        self.fpath = fpath
+        self.lock = Lock()
+        self.f = open(self.fpath, "a")
+
+        signal.signal(signal.SIGUSR1, self.__sighandler__)
+
+    def close(self):
+        with self.lock:
+            return self.f.close()
+
+    def write(self, *args, **kwargs):
+        with self.lock:
+            return self.f.write(*args, **kwargs)
+
+    def flush(self):
+        with self.lock:
+            return self.f.flush()
+
+    def __sighandler__(self, signum, frame):
+        with self.lock:
+            self.f.close()
+            self.f = open(self.fpath, "a")
 
 
 class StderrConsoleRenderer(object):
@@ -247,7 +274,7 @@ class BoundLevelLogger(structlog.BoundLoggerBase):
 
 
 def _structlog_default_keys_processor(logger_class, log_method, event):
-    """ Add unique id, type and hostname """
+    """Add unique id, type and hostname"""
     global HOSTNAME
 
     if "id" not in event:
@@ -393,7 +420,8 @@ def _configure_logger(
     streams = []
 
     if fpath:
-        streams.append(open(fpath, "a"))
+        f = FileWrapper(fpath)
+        streams.append(f)
 
     if fmt == "json" and not quiet:
         streams.append(sys.stderr)
