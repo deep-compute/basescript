@@ -4,7 +4,7 @@ import sys
 import argparse
 import socket
 
-from .log import init_logger, pretty_print
+from .log import init_logger, pretty_print, ReadEnv
 from deeputil import Dummy
 
 
@@ -58,6 +58,8 @@ class BaseScript(object):
 
         self._flush_metrics_q = log._force_flush_q
         self.log = log.bind(name=self.args.name)
+
+        ReadEnv(self.args.env_file)
 
         self.stats = Dummy()
 
@@ -173,6 +175,11 @@ class BaseScript(object):
             default=False,
             action="store_true",
             help="Hide log keys such as id, host",
+        )
+        parser.add_argument(
+            "--env-file",
+            default=None,
+            help="Writes logs to log file if specified, default: %(default)s",
         )
 
     def define_args(self, parser):
