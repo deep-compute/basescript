@@ -59,7 +59,8 @@ class BaseScript(object):
         self._flush_metrics_q = log._force_flush_q
         self.log = log.bind(name=self.args.name)
 
-        ReadEnv(self.args.env_file)
+        if self.args.env_file:
+            ReadEnv(self.args.env_file)
 
         self.stats = Dummy()
 

@@ -180,7 +180,8 @@ class BoundLevelLogger(structlog.BoundLoggerBase):
         f = sys._getframe()
         level_method_frame = f.f_back
         caller_frame = level_method_frame.f_back
-        event_dict.update(self.env_context)
+        if hasattr(self, "env_context"):
+            event_dict.update(self.env_context)
         return event_dict
 
     def debug(self, event=None, *args, **kw):
