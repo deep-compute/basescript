@@ -7,6 +7,7 @@ import socket
 import logging
 import numbers
 import signal
+import yaml
 from six.moves import queue
 from threading import Thread, Lock
 from datetime import datetime
@@ -67,6 +68,22 @@ class FileWrapper:
         with self.lock:
             self.f.close()
             self.f = open(self.fpath, "a")
+
+
+class ReadEnv:
+    def __init__(self, envfile):
+        self.envfile = envfile
+        self.env = self.read()
+        setattr(structlog.BoundLoggerBase, "env_context", self.env)
+        signal.signal(signal.SIGUSR1, self.__sighandler__)
+
+    def read(self):
+        with open(self.envfile) as f:
+            return yaml.full_load(f.read())
+
+    def __sighandler__(self, signum, frame):
+        self.env = self.read()
+        setattr(structlog.BoundLoggerBase, "env_context", self.env)
 
 
 class StderrConsoleRenderer(object):
@@ -163,6 +180,8 @@ class BoundLevelLogger(structlog.BoundLoggerBase):
         f = sys._getframe()
         level_method_frame = f.f_back
         caller_frame = level_method_frame.f_back
+        if hasattr(self, "env_context"):
+            event_dict.update(self.env_context)
         return event_dict
 
     def debug(self, event=None, *args, **kw):
