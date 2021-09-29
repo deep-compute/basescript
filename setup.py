@@ -43,7 +43,7 @@ setup(
         "structlog==18.1.0",
         "colorama==0.3.9",
         "deeputil>=0.2.7",
-        "PyYAML==5.1.1"
+        "PyYAML==5.4"
     ],
     package_dir={"basescript": "basescript"},
     packages=find_packages(".", exclude=["tests*"]),
