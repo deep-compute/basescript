@@ -25,7 +25,7 @@ def get_long_description():
 
 long_description = get_long_description()
 
-version = "0.3.9"
+version = "0.3.10"
 setup(
     name="basescript",
     version=version,
@@ -43,7 +43,7 @@ setup(
         "structlog==18.1.0",
         "colorama==0.3.9",
         "deeputil>=0.2.7",
-        "PyYAML==5.1.1"
+        "PyYAML==6.0"
     ],
     package_dir={"basescript": "basescript"},
     packages=find_packages(".", exclude=["tests*"]),
