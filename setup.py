@@ -41,9 +41,9 @@ setup(
         "pytz>2018.3",
         "six>=1.11.0",
         "structlog==18.1.0",
-        "colorama==0.3.9",
+        "colorama>=0.3.9",
         "deeputil>=0.2.7",
-        "PyYAML==6.0"
+        "PyYAML>=6.0"
     ],
     package_dir={"basescript": "basescript"},
     packages=find_packages(".", exclude=["tests*"]),
