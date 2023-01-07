@@ -38,7 +38,7 @@ setup(
     download_url="https://github.com/deep-compute/basescript/tarball/%s" % version,
     license="MIT License",
     install_requires=[
-        "pytz==2018.3",
+        "pytz>2018.3",
         "six>=1.11.0",
         "structlog==18.1.0",
         "colorama==0.3.9",
